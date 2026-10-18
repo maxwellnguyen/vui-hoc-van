@@ -114,6 +114,69 @@ export function OceanBackground() {
   )
 }
 
+type Creature = { emoji: string; top?: string; bottom?: string; left?: string; right?: string; size: string; anim: string; dur: number; delay?: number; flip?: boolean }
+
+const SIDE_CREATURES: Creature[] = [
+  // bên trái
+  { emoji: '🐙', top: '12%', left: '8%', size: 'text-7xl', anim: 'creature-drift', dur: 7 },
+  { emoji: '🪼', top: '30%', left: '24%', size: 'text-6xl', anim: 'creature-jelly', dur: 4.5, delay: 1 },
+  { emoji: '🐢', top: '50%', left: '6%', size: 'text-7xl', anim: 'creature-drift', dur: 9, delay: 2, flip: true },
+  { emoji: '🦐', top: '44%', left: '28%', size: 'text-4xl', anim: 'creature-bob', dur: 2.6 },
+  { emoji: '🐠', top: '66%', left: '22%', size: 'text-5xl', anim: 'creature-drift', dur: 6, delay: .5, flip: true },
+  { emoji: '🦀', bottom: '9%', left: '10%', size: 'text-5xl', anim: 'creature-scuttle', dur: 5 },
+  { emoji: '🐚', bottom: '7%', left: '30%', size: 'text-4xl', anim: 'creature-bob', dur: 3.5, delay: 1 },
+  // bên phải
+  { emoji: '🐬', top: '10%', right: '18%', size: 'text-7xl', anim: 'creature-drift', dur: 6.5 },
+  { emoji: '🐳', top: '26%', right: '4%', size: 'text-6xl', anim: 'creature-bob', dur: 4, delay: .8 },
+  { emoji: '🦑', top: '40%', right: '24%', size: 'text-6xl', anim: 'creature-jelly', dur: 5, delay: 1.5 },
+  { emoji: '🐡', top: '56%', right: '8%', size: 'text-5xl', anim: 'creature-drift', dur: 7.5, delay: 2 },
+  { emoji: '🦞', top: '70%', right: '26%', size: 'text-5xl', anim: 'creature-bob', dur: 3, delay: .3 },
+  { emoji: '⭐', bottom: '8%', right: '10%', size: 'text-5xl', anim: 'creature-sway', dur: 3.5 },
+  { emoji: '🦭', bottom: '6%', right: '28%', size: 'text-6xl', anim: 'creature-bob', dur: 4.2, delay: 1.2 },
+]
+
+const SEAWEED = ['3%', '16%', '34%', '64%', '82%', '95%']
+
+/** Sinh vật biển trang trí hai bên (ẩn trên màn hình nhỏ để không che form). */
+export function SeaCreatures() {
+  return (
+    <div className="pointer-events-none fixed inset-0 -z-10 hidden overflow-hidden lg:block" aria-hidden>
+      {SEAWEED.map((left, i) => (
+        <span key={`w${i}`} className="creature creature-sway bottom-0 text-6xl"
+          style={{ left, animationDuration: `${3 + (i % 3)}s`, animationDelay: `${i * .4}s` }}>
+          {i % 2 ? '🪸' : '🌿'}
+        </span>
+      ))}
+      {SIDE_CREATURES.map((c, i) => (
+        <span key={i} className={`creature ${c.anim} ${c.size}`}
+          style={{ top: c.top, bottom: c.bottom, left: c.left, right: c.right, animationDuration: `${c.dur}s`, animationDelay: `${c.delay ?? 0}s` }}>
+          <span className={`inline-block ${c.flip ? '-scale-x-100' : ''}`}>{c.emoji}</span>
+        </span>
+      ))}
+    </div>
+  )
+}
+
+/** Chữ nhún nhảy từng ký tự. */
+export function BouncyTitle({ text, className = '' }: { text: string; className?: string }) {
+  const colors = ['text-ocean-deep', 'text-ocean', 'text-lagoon', 'text-coral']
+  let n = 0
+  return (
+    <h1 className={className} aria-label={text}>
+      {text.split(' ').map((word, w) => (
+        <span key={w} aria-hidden className="inline-block whitespace-nowrap">
+          {[...word].map((ch) => {
+            const i = n++
+            return (
+              <span key={i} className={`title-letter ${colors[i % colors.length]}`} style={{ animationDelay: `${i * .12}s` }}>{ch}</span>
+            )
+          })}
+        </span>
+      )).reduce<ReactNode[]>((acc, el, i) => (i ? [...acc, ' ', el] : [el]), [])}
+    </h1>
+  )
+}
+
 export function WordImage({ emoji, imageUrl, text, className = 'h-24 w-24 text-6xl' }:
   { emoji?: string | null; imageUrl?: string | null; text: string; className?: string }) {
   if (imageUrl) return <img src={imageUrl} alt={text} className={`${className} rounded-2xl object-cover`} />

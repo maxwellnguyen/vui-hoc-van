@@ -8,6 +8,7 @@ import {
 } from '../lib/types'
 import { Button, Card, Loading, StarRating, WordImage } from '../components/ui'
 import { ExerciseRunner } from '../exercises/ExerciseRunner'
+import { ClassTools } from './ClassTools'
 
 const input = 'rounded-xl border-2 border-aqua bg-white px-3 py-2 outline-none focus:border-ocean'
 
@@ -28,12 +29,14 @@ export function AdminLayout() {
         <NavLink to="/admin/units" className={tab}>Âm / Vần / Thanh</NavLink>
         <NavLink to="/admin/words" className={tab}>Từ & hình</NavLink>
         <NavLink to="/admin/exercises" className={tab}>Bài tập</NavLink>
+        <NavLink to="/admin/tien-ich" className={tab}>🧰 Tiện ích lớp học</NavLink>
       </nav>
       <Routes>
         <Route index element={<StudentsAdmin />} />
         <Route path="units" element={<UnitsAdmin />} />
         <Route path="words" element={<WordsAdmin />} />
         <Route path="exercises" element={<ExercisesAdmin />} />
+        <Route path="tien-ich" element={<ClassTools />} />
       </Routes>
     </div>
   )

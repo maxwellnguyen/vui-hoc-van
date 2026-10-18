@@ -7,7 +7,7 @@ import { shuffle, type ExerciseProps } from './common'
 
 const key = (r: string, c: string) => `${r}|${c}`
 
-/** Bảng ghép vần kiểu SGK: hàng = âm chính, cột = âm cuối. Chạm ô trống → chọn vần đúng. */
+/** Bảng ghép vần kiểu SGK (config: rows = âm chính, cols = âm cuối; hiển thị xoay ngang). Chạm ô trống → chọn vần đúng. */
 export function RhymeGrid({ config, onFinish }: ExerciseProps<RhymeGridConfig>) {
   const { rows, cols } = config
   const given = useMemo(() => new Set((config.given ?? []).map(([r, c]) => key(r, c))), [config])
@@ -43,42 +43,45 @@ export function RhymeGrid({ config, onFinish }: ExerciseProps<RhymeGridConfig>) 
   const firstTry = todo.filter((k) => filled.get(k)).length
 
   return (
-    <div className="flex flex-col items-center gap-5">
+    <div className="flex flex-col items-center gap-4">
       <p className="text-lg text-ocean">Chạm vào ô trống để ghép vần. Chạm ô đã có để nghe đọc.</p>
-      <table className="border-separate border-spacing-1 font-display text-3xl font-bold">
-        <thead>
-          <tr>
-            <th />
-            {cols.map((c) => <th key={c} className="h-14 w-24 rounded-xl bg-star text-ocean-deep">{c}</th>)}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r}>
-              <th className="h-14 w-16 rounded-xl bg-star text-ocean-deep">{r}</th>
-              {cols.map((c) => {
-                const k = key(r, c)
-                if (blocked.has(k)) return (
-                  <td key={c} className="relative rounded-xl bg-sand/70">
-                    <svg className="absolute inset-0 h-full w-full" preserveAspectRatio="none" viewBox="0 0 10 10"><path d="M0 0L10 10M10 0L0 10" stroke="#d9a800" strokeWidth=".4" /></svg>
-                  </td>
-                )
-                const shown = given.has(k) || filled.has(k)
-                const isOpen = open?.r === r && open?.c === c
-                return (
-                  <td key={c} className="p-0">
-                    <button
-                      onClick={() => (shown ? speak(r + c) : (setOpen({ r, c }), setWrongPick(null)))}
-                      className={`h-14 w-24 rounded-xl text-ocean-deep transition active:scale-95 ${shown ? (given.has(k) ? 'bg-sand' : 'animate-pop bg-seaweed/30') : isOpen ? 'bg-aqua ring-4 ring-ocean' : 'bg-sand/60 hover:bg-aqua/60'}`}>
-                      {shown ? r + c : isOpen ? '?' : ''}
-                    </button>
-                  </td>
-                )
-              })}
+      {/* Bảng nằm ngang: cột = âm chính, hàng = âm cuối → gọn trong một màn hình, không phải cuộn */}
+      <div className="max-w-full overflow-x-auto pb-1">
+        <table className="border-separate border-spacing-1 font-display text-2xl font-bold sm:text-3xl">
+          <thead>
+            <tr>
+              <th />
+              {rows.map((r) => <th key={r} className="h-12 w-14 rounded-xl bg-star text-ocean-deep sm:h-14 sm:w-20">{r}</th>)}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {cols.map((c) => (
+              <tr key={c}>
+                <th className="h-12 w-12 rounded-xl bg-star text-ocean-deep sm:h-14 sm:w-16">{c}</th>
+                {rows.map((r) => {
+                  const k = key(r, c)
+                  if (blocked.has(k)) return (
+                    <td key={r} className="relative rounded-xl bg-sand/70">
+                      <svg className="absolute inset-0 h-full w-full" preserveAspectRatio="none" viewBox="0 0 10 10"><path d="M0 0L10 10M10 0L0 10" stroke="#d9a800" strokeWidth=".4" /></svg>
+                    </td>
+                  )
+                  const shown = given.has(k) || filled.has(k)
+                  const isOpen = open?.r === r && open?.c === c
+                  return (
+                    <td key={r} className="p-0">
+                      <button
+                        onClick={() => (shown ? speak(r + c) : (setOpen({ r, c }), setWrongPick(null)))}
+                        className={`h-12 w-14 rounded-xl text-ocean-deep transition active:scale-95 sm:h-14 sm:w-20 ${shown ? (given.has(k) ? 'bg-sand' : 'animate-pop bg-seaweed/30') : isOpen ? 'bg-aqua ring-4 ring-ocean' : 'bg-sand/60 hover:bg-aqua/60'}`}>
+                        {shown ? r + c : isOpen ? '?' : ''}
+                      </button>
+                    </td>
+                  )
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {open && (
         <div className="flex animate-pop flex-col items-center gap-2 rounded-3xl bg-white p-4 shadow-lg">
@@ -94,8 +97,10 @@ export function RhymeGrid({ config, onFinish }: ExerciseProps<RhymeGridConfig>) 
         </div>
       )}
 
-      <p className="text-ocean">Đã ghép {todo.filter((k) => filled.has(k)).length} / {todo.length} ô</p>
-      <Button variant="success" disabled={!done} onClick={() => onFinish(percent(firstTry, todo.length))}>Hoàn thành ✔</Button>
+      <div className="flex items-center gap-4">
+        <p className="text-ocean">Đã ghép {todo.filter((k) => filled.has(k)).length} / {todo.length} ô</p>
+        <Button variant="success" disabled={!done} onClick={() => onFinish(percent(firstTry, todo.length))}>Hoàn thành ✔</Button>
+      </div>
     </div>
   )
 }

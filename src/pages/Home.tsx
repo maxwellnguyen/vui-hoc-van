@@ -7,6 +7,8 @@ const ISLANDS = [
   { to: '/van', title: 'Đảo Vần', desc: 'Đọc · Đúng – sai · Ghép vần', emoji: '🐙', color: 'from-aqua to-lagoon' },
   { to: '/thanh', title: 'Đảo Thanh', desc: 'Sắc · Huyền · Hỏi · Ngã · Nặng', emoji: '🐢', color: 'from-ocean to-ocean-deep' },
   { to: '/bai', title: 'Ôn tập theo bài', desc: 'Bảng vần · Ngôi sao · Đoạn văn', emoji: '⭐', color: 'from-star to-coral' },
+  { to: '/tro-choi', title: 'Trò chơi', desc: 'Lật thẻ · Đố nhanh · Kéo co', emoji: '🎮', color: 'from-[#9B2C8F] to-[#C04BAE]' },
+  { to: '/xep-hang', title: 'Đua rank', desc: 'Ai nhiều sao nhất tuần này?', emoji: '🏆', color: 'from-seaweed to-lagoon' },
 ]
 
 export function Home() {

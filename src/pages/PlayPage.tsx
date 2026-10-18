@@ -7,6 +7,7 @@ import {
 import { EXERCISE_LABELS, UNIT_KIND_LABELS, type Exercise, type Unit, type Word } from '../lib/types'
 import { Card, Loading, StarRating } from '../components/ui'
 import { ExerciseRunner } from '../exercises/ExerciseRunner'
+import { Flashcards } from '../components/Flashcards'
 
 function Player({ title, exercises, unit, unitWords, allWords, stars, onSaved }: {
   title: string; exercises: Exercise[]; unit?: Unit | null; unitWords: Word[]; allWords: Word[]
@@ -15,8 +16,8 @@ function Player({ title, exercises, unit, unitWords, allWords, stars, onSaved }:
   const [idx, setIdx] = useState(0)
   const ex = exercises[idx]
   return (
-    <div className="flex flex-col gap-5">
-      <h1 className="font-display text-4xl font-extrabold">{title}</h1>
+    <div className="flex flex-col gap-3">
+      <h1 className="font-display text-3xl font-extrabold">{title}</h1>
       <div className="flex flex-wrap gap-2">
         {exercises.map((e, i) => (
           <button key={e.id} onClick={() => { setIdx(i); onSaved() }}
@@ -29,7 +30,7 @@ function Player({ title, exercises, unit, unitWords, allWords, stars, onSaved }:
       </div>
       {ex ? (
         <Card>
-          <p className="mb-4 inline-block rounded-full bg-foam px-3 py-1 text-sm font-bold text-ocean">{EXERCISE_LABELS[ex.type]}</p>
+          <p className="mb-2 inline-block rounded-full bg-foam px-3 py-1 text-sm font-bold text-ocean">{EXERCISE_LABELS[ex.type]}</p>
           <ExerciseRunner exercise={ex} unit={unit} unitWords={unitWords} allWords={allWords}
             onNext={idx + 1 < exercises.length ? () => { setIdx(idx + 1); onSaved() } : undefined} />
         </Card>
@@ -40,6 +41,7 @@ function Player({ title, exercises, unit, unitWords, allWords, stars, onSaved }:
 
 export function UnitPage() {
   const id = Number(useParams().id)
+  const [cards, setCards] = useState(false)
   const { data, loading, error, reload } = useAsync(async () => {
     const [unit, unitWords, allWords, exercises, attempts] = await Promise.all([
       fetchUnit(id), fetchUnitWords(id), fetchWords(), fetchExercises({ unitId: id }), fetchMyAttempts(),
@@ -51,8 +53,14 @@ export function UnitPage() {
   const { unit } = data
   return (
     <>
-      <Link to={`/${unit.kind}`} className="mb-3 inline-block font-bold text-ocean-deep">← {UNIT_KIND_LABELS[unit.kind]}</Link>
+      <div className="mb-2 flex items-center justify-between">
+        <Link to={`/${unit.kind}`} className="font-bold text-ocean-deep">← {UNIT_KIND_LABELS[unit.kind]}</Link>
+        {data.unitWords.length > 0 && (
+          <button onClick={() => setCards(true)} className="rounded-xl bg-white/85 px-4 py-2 font-bold text-ocean-deep shadow hover:bg-white">📽️ Trình chiếu thẻ từ</button>
+        )}
+      </div>
       <Player title={`${UNIT_KIND_LABELS[unit.kind]} ${unitLabel(unit)}`} {...data} onSaved={reload} />
+      {cards && <Flashcards title={`${UNIT_KIND_LABELS[unit.kind]} ${unitLabel(unit)}`} words={data.unitWords} onClose={() => setCards(false)} />}
     </>
   )
 }

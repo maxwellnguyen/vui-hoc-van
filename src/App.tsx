@@ -9,6 +9,8 @@ import { UnitsPage } from './pages/UnitsPage'
 import { LessonPage, LessonsList, UnitPage } from './pages/PlayPage'
 import { Profile } from './pages/Profile'
 import { AdminLayout } from './admin/Admin'
+import { GamePage, GamesHub } from './pages/Games'
+import { Leaderboard } from './pages/Leaderboard'
 
 export default function App() {
   return (
@@ -25,6 +27,9 @@ export default function App() {
             <Route path="unit/:id" element={<UnitPage />} />
             <Route path="bai" element={<LessonsList />} />
             <Route path="bai/:number" element={<LessonPage />} />
+            <Route path="tro-choi" element={<GamesHub />} />
+            <Route path="tro-choi/:id" element={<GamePage />} />
+            <Route path="xep-hang" element={<Leaderboard />} />
             <Route path="me" element={<Profile />} />
             <Route path="admin/*" element={<RequireAuth role="teacher"><AdminLayout /></RequireAuth>} />
           </Route>

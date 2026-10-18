@@ -71,3 +71,9 @@ export function bestStars(attempts: Attempt[]): Map<number, number> {
 }
 
 export const unitLabel = (u: Unit) => u.title ?? u.value
+
+export interface RankRow { user_id: string; display_name: string; username: string; stars: number; exercises: number }
+
+/** Bảng xếp hạng học sinh theo tổng sao (cao nhất mỗi bài); days = 7 → tuần này */
+export const fetchLeaderboard = async (days: number | null) =>
+  unwrap<RankRow[]>(await supabase.rpc('leaderboard', { p_days: days }))

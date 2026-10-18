@@ -27,6 +27,19 @@ body {
 @keyframes swim { 0% { transform: translateX(-15vw) } 100% { transform: translateX(115vw) } }
 @keyframes wave { 0% { transform: translateX(0) } 100% { transform: translateX(-50%) } }
 @keyframes draw { to { stroke-dashoffset: 0 } }
+@keyframes sway { 0%,100% { transform: rotate(-6deg) } 50% { transform: rotate(6deg) } }
+@keyframes drift { 0%,100% { transform: translate(0,0) rotate(0) } 25% { transform: translate(12px,-14px) rotate(4deg) } 50% { transform: translate(0,-24px) rotate(0) } 75% { transform: translate(-12px,-10px) rotate(-4deg) } }
+@keyframes jelly { 0%,100% { transform: translateY(0) scaleY(1) } 40% { transform: translateY(-26px) scaleY(.88) } 70% { transform: translateY(-14px) scaleY(1.05) } }
+@keyframes scuttle { 0%,100% { transform: translateX(0) } 50% { transform: translateX(40px) } }
+@keyframes letter { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-8px) } }
+
+.creature { position: absolute; display: inline-block; line-height: 1; filter: drop-shadow(0 6px 8px rgba(11,61,92,.18)); }
+.creature-sway { animation: sway ease-in-out infinite; transform-origin: bottom center; }
+.creature-drift { animation: drift ease-in-out infinite; }
+.creature-jelly { animation: jelly ease-in-out infinite; }
+.creature-scuttle { animation: scuttle ease-in-out infinite; }
+.creature-bob { animation: bob ease-in-out infinite; }
+.title-letter { display: inline-block; animation: letter 2.4s ease-in-out infinite; }
 
 .bubble { position: absolute; bottom: -40px; border-radius: 9999px; background: radial-gradient(circle at 30% 30%, #fff, rgba(255,255,255,.25) 60%, transparent 70%); border: 1px solid rgba(255,255,255,.6); animation: rise linear infinite; }
 .fish { position: absolute; left: 0; animation: swim linear infinite; }
@@ -34,5 +47,5 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; }
-  .bubble, .fish { display: none; }
+  .bubble, .fish, .creature-scuttle { display: none; }
 }

@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from './AuthProvider'
-import { Button, Whale } from '../components/ui'
+import { BouncyTitle, Button, SeaCreatures, Whale } from '../components/ui'
 
 export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
   const { session, signIn, signUp } = useAuth()
@@ -10,6 +10,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
   const [username, setUsername] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -31,11 +32,14 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
-      <form onSubmit={submit} className="w-full max-w-sm rounded-[2rem] bg-white/90 p-6 shadow-xl backdrop-blur">
+      <SeaCreatures />
+      <form onSubmit={submit} className="relative w-full max-w-sm rounded-[2rem] bg-white/90 p-6 shadow-xl backdrop-blur">
+        <span aria-hidden className="creature creature-sway -left-5 -top-5 text-5xl" style={{ animationDuration: '3s' }}>🐠</span>
+        <span aria-hidden className="creature creature-bob -bottom-4 -right-4 text-5xl" style={{ animationDuration: '3.6s' }}>🦀</span>
         <div className="mb-4 flex flex-col items-center">
           <Whale className="h-24 w-24 animate-bob" />
-          <h1 className="font-display text-4xl font-extrabold text-ocean-deep">Biển Chữ</h1>
-          <p className="text-ocean">{mode === 'login' ? 'Chào bé! Đăng nhập để học nhé' : 'Tạo tài khoản mới'}</p>
+          <BouncyTitle text="Vui học cùng bé" className="mt-1 text-center font-display text-4xl font-extrabold leading-tight sm:text-5xl" />
+          <p className="mt-1 text-ocean">{mode === 'login' ? 'Chào bé! Đăng nhập để học nhé' : 'Tạo tài khoản mới'}</p>
         </div>
         <label className="mb-3 block">
           <span className="mb-1 block font-bold text-ocean-deep">Tên đăng nhập</span>
@@ -50,8 +54,16 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
         )}
         <label className="mb-4 block">
           <span className="mb-1 block font-bold text-ocean-deep">Mật khẩu</span>
-          <input className={input} type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-            autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required minLength={6} />
+          <div className="relative">
+            <input className={`${input} pr-14`} type={showPassword ? 'text' : 'password'} value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required minLength={6} />
+            <button type="button" onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+              className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl text-2xl hover:bg-foam">
+              {showPassword ? '🙈' : '👁️'}
+            </button>
+          </div>
         </label>
         {error && <p className="mb-3 rounded-xl bg-coral/15 p-3 font-bold text-coral">{error}</p>}
         <Button type="submit" disabled={busy} className="w-full">

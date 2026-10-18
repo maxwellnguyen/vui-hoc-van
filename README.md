@@ -1,4 +1,4 @@
-# 🐳 Biển Chữ
+# 🐳 Vui học cùng bé
 
 Web bài tập tương tác ôn **âm – vần – thanh** cho học sinh tiểu học. React + TypeScript + Vite + Tailwind + Supabase.
 

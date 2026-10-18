@@ -70,3 +70,52 @@ describe('scoring', () => {
     expect(traceScore([], () => true, 0)).toBe(0)
   })
 })
+
+import { HAND_LETTERS, layoutHandwriting, mapPoints, strokeStart } from './handwriting'
+import { chunkText } from './speech'
+
+describe('handwriting – mẫu chữ viết thường', () => {
+  const VI_LOWER = [...'aăâbcdđeêghiklmnoôơpqrstuưvxy']
+
+  it('có đủ 29 chữ cái tiếng Việt', () => {
+    expect(VI_LOWER).toHaveLength(29)
+    for (const c of VI_LOWER) expect(HAND_LETTERS[c], c).toBeDefined()
+  })
+
+  it('chiều cao đúng mẫu (ô li)', () => {
+    const h = (c: string) => { const l = layoutHandwriting(c)!; return [l.minY, l.maxY] }
+    expect(h('a')[0]).toBeCloseTo(-2, 0)      // 2 ô li
+    expect(h('l')[0]).toBeCloseTo(-5, 0)      // 5 ô li
+    expect(h('d')[0]).toBeCloseTo(-4, 0)      // 4 ô li
+    expect(h('t')[0]).toBeCloseTo(-3, 0)      // 3 ô li
+    expect(h('g')[1]).toBeGreaterThan(2.5)    // khuyết dưới 3 ô li
+    expect(h('p')[1]).toBeCloseTo(2, 0)
+  })
+
+  it('ghép âm nhiều chữ cái, chữ hoa thì trả null', () => {
+    const ngh = layoutHandwriting('ngh')!
+    expect(ngh.strokes.length).toBe(HAND_LETTERS.n.strokes.length + HAND_LETTERS.g.strokes.length + HAND_LETTERS.h.strokes.length)
+    expect(ngh.maxX).toBeGreaterThan(6)
+    expect(layoutHandwriting('A')).toBeNull()
+  })
+
+  it('mapPoints / strokeStart', () => {
+    expect(mapPoints('M 1,-2 L 3,4', (x, y) => [x * 10, y + 1])).toBe('M 10,-1 L 30,5')
+    expect(strokeStart('M 1.5,-2 C 0,0 0,0 0,0')).toEqual([1.5, -2])
+  })
+})
+
+describe('chunkText – cắt đoạn cho giọng online', () => {
+  it('giữ nguyên câu ngắn', () => {
+    expect(chunkText('con cá')).toEqual([{ text: 'con cá', start: 0 }])
+  })
+  it('cắt câu dài ≤ max ký tự, start trỏ đúng vị trí', () => {
+    const t = 'Gà mẹ dẫn đàn con đi ăn. Đàn con chạy theo mẹ. Mẹ bới đất tìm giun cho con ăn.'
+    const parts = chunkText(t, 30)
+    expect(parts.length).toBeGreaterThan(1)
+    for (const p of parts) {
+      expect(p.text.length).toBeLessThanOrEqual(30)
+      expect(t.slice(p.start).startsWith(p.text)).toBe(true)
+    }
+  })
+})
