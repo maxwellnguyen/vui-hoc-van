@@ -24,7 +24,7 @@ export function TraceCanvas({ config, onFinish }: ExerciseProps<TraceConfig>) {
   // tỉ lệ: 1 ô li = s px; căn giữa chữ
   const geo = useMemo(() => {
     if (!hand) return null
-    const s = Math.min(36, (W * 0.8) / (hand.maxX - hand.minX), (H * 0.86) / (hand.maxY - hand.minY))
+    const s = Math.min(52, (W * 0.8) / (hand.maxX - hand.minX), (H * 0.86) / (hand.maxY - hand.minY))
     const x0 = W / 2 - s * (hand.minX + hand.maxX) / 2
     const y0 = H / 2 - s * (hand.minY + hand.maxY) / 2
     const tf = (d: string) => mapPoints(d, (x, y) => [x0 + s * x, y0 + s * y])
@@ -146,7 +146,7 @@ export function TraceCanvas({ config, onFinish }: ExerciseProps<TraceConfig>) {
                 <g key={`s${i}`}>
                   <circle cx={x} cy={y} r={6} fill={STROKE_COLORS[i % STROKE_COLORS.length]} />
                   {geo.paths.length > 1 && (
-                    <text x={x - 12} y={y - 10} fontSize="15" fontWeight="800" fill={STROKE_COLORS[i % STROKE_COLORS.length]}
+                    <text x={x + (i % 2 ? 16 : -16)} y={y - 8} fontSize="15" fontWeight="800" fill={STROKE_COLORS[i % STROKE_COLORS.length]}
                       textAnchor="middle" fontFamily="Nunito, sans-serif">{i + 1}</text>
                   )}
                 </g>

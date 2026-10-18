@@ -24,12 +24,12 @@ export function ReadCard({ config, unit, unitWords, allWords, onFinish }: Exerci
         </button>
       )}
       {unit?.kind === 'thanh' && <p className="font-display text-4xl font-bold text-ocean-deep">{unit.title}</p>}
-      <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3">
+      <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
         {items.map((w) => (
           <button key={w.text} onClick={() => hear(w.text)}
-            className={`flex flex-col items-center gap-2 rounded-3xl border-4 bg-white p-4 shadow transition active:scale-95 ${heard.has(w.text) ? 'border-seaweed' : 'border-aqua'}`}>
-            {(w.emoji || w.image_url) && <WordImage emoji={w.emoji} imageUrl={w.image_url} text={w.text} />}
-            <HighlightedText text={w.text} rhymes={rhymes} className="font-display text-3xl font-bold" />
+            className={`flex flex-col items-center gap-1 rounded-3xl border-4 bg-white p-3 shadow transition active:scale-95 ${heard.has(w.text) ? 'border-seaweed' : 'border-aqua'}`}>
+            {(w.emoji || w.image_url) && <WordImage emoji={w.emoji} imageUrl={w.image_url} text={w.text} className="h-20 w-20 text-5xl" />}
+            <HighlightedText text={w.text} rhymes={rhymes} className="font-display text-2xl font-bold" />
             <span className="text-sm text-ocean">{heard.has(w.text) ? '✅ đã nghe' : '🔊 chạm để nghe'}</span>
           </button>
         ))}

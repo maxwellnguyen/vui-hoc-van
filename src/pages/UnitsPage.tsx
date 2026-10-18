@@ -7,10 +7,10 @@ import { Loading } from '../components/ui'
 /** Chữ càng ngắn càng to – để dấu (˘ ˆ ʼ ´ ` ? ~ .) hiện rõ trên/dưới chữ */
 const labelSize = (t: string) => {
   const n = [...t].length
-  if (n <= 2) return 'text-5xl sm:text-6xl'
-  if (n === 3) return 'text-4xl sm:text-5xl'
-  if (n === 4) return 'text-3xl sm:text-4xl'
-  return 'px-3 text-xl sm:text-2xl'
+  if (n <= 2) return 'text-4xl sm:text-5xl'
+  if (n === 3) return 'text-3xl sm:text-4xl'
+  if (n === 4) return 'text-2xl sm:text-3xl'
+  return 'px-2 text-lg sm:text-xl'
 }
 
 const SUBTYPE_EMOJI: Record<string, string> = { chinh: '🐚', phu: '🦀', ghep: '🐙' }
@@ -37,7 +37,7 @@ export function UnitsPage({ kind }: { kind: UnitKind }) {
           ))}
         </div>
       )}
-      <div className="mx-auto grid w-full max-w-lg grid-cols-3 gap-4 sm:gap-6">
+      <div className="mx-auto grid w-full max-w-4xl grid-cols-4 gap-3 sm:grid-cols-5 sm:gap-4 md:grid-cols-6">
         {units.map((u, i) => {
           const label = unitLabel(u)
           return (

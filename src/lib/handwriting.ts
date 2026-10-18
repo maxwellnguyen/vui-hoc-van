@@ -8,7 +8,8 @@
 export interface HandLetter { w: number; strokes: string[] }
 
 // ---- các nét dùng lại ----
-const RING = 'M 1.75,-1.6 C 1.6,-1.95 1.3,-2.05 1.0,-2.0 C 0.4,-1.95 0,-1.4 0,-1.0 C 0,-0.35 0.4,0 0.9,0 C 1.4,0 1.75,-0.5 1.75,-1.0'
+// nét cong kín: đặt bút dưới đường kẻ 3, vòng sang trái xuống đáy, lên bên phải và khép lại đúng điểm đặt bút
+const RING = 'M 1.65,-1.7 C 1.45,-1.98 1.2,-2.05 0.95,-2.05 C 0.4,-2.05 0,-1.55 0,-1.0 C 0,-0.4 0.42,0 0.92,0 C 1.42,0 1.7,-0.45 1.7,-1.0 C 1.7,-1.3 1.68,-1.52 1.65,-1.7'
 const hookRight = (x: number, top: number) =>
   `M ${x},${top} L ${x},-0.35 C ${x},-0.05 ${x + 0.2},0 ${x + 0.4},0 C ${x + 0.6},0 ${x + 0.75},-0.15 ${x + 0.8},-0.4`
 const lift = (x: number, top = -2) => `M ${x - 0.5},${top + 0.85} L ${x},${top}`

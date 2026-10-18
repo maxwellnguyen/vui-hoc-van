@@ -19,7 +19,7 @@ export function Home() {
         <Whale className="h-24 w-24 animate-bob" />
         <div>
           <h1 className="font-display text-4xl font-extrabold">Chào {profile?.display_name ?? 'bé'}! 👋</h1>
-          <p className="text-xl text-ocean">Hôm nay mình lặn xuống đảo nào?</p>
+          <p className="text-xl text-ocean">Hôm nay bé muốn học gì nào?</p>
         </div>
       </div>
       <div className="grid w-full gap-6 sm:grid-cols-2">

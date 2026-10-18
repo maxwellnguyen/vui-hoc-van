@@ -200,7 +200,7 @@ select u.id, w.id from (values
   ('am','b','bà'),('am','b','bò'),('am','c','cá'),('am','g','gà'),('am','m','mèo'),('am','x','xe'),
   ('am','ch','chó'),('am','gh','ghế'),('am','ngh','nghé'),('am','kh','khế'),('am','nh','nhà'),('am','ph','phở'),
   ('am','qu','quả na'),('am','th','thỏ'),('am','tr','trâu'),
-  ('van','oc','hạt thóc'),('van','oc','con sóc'),('van','ôc','cột mốc'),('van','uc','lọ mực'),('van','ăc','xúc xắc'),
+  ('van','oc','hạt thóc'),('van','oc','con sóc'),('van','ôc','cột mốc'),('van','ưc','lọ mực'),('van','ăc','xúc xắc'),
   ('van','ot','gót chân'),('van','ăt','đôi mắt'),('van','ơt','quả ớt'),('van','ât','bật lửa'),('van','âc','giấc mơ'),
   ('van','an','bàn'),('van','am','cam'),('van','eo','mèo'),('van','eo','kéo'),('van','ưa','dưa'),
   ('thanh','sắc','cá'),('thanh','huyền','gà'),('thanh','huyền','bà'),('thanh','hỏi','thỏ'),('thanh','hỏi','phở'),('thanh','ngã','dưa')
@@ -323,6 +323,79 @@ select u.id, w.id from (values
 ) as x(kind, value, word)
 join public.units u on u.kind = x.kind and u.value = x.value
 join public.words w on w.text = x.word
+on conflict do nothing;
+
+-- ============ KHO TỪ LỚN + TỰ GẮN TỪ VÀO ÂM / VẦN / THANH ============
+-- Bỏ dấu thanh nhưng giữ ă â ê ô ơ ư:  "quạt" → "quat"
+create or replace function public.vn_base(t text) returns text language sql immutable as $$
+  select translate(lower(t),
+    'áàảãạắằẳẵặấầẩẫậéèẻẽẹếềểễệíìỉĩịóòỏõọốồổỗộớờởỡợúùủũụứừửữựýỳỷỹỵ',
+    'aaaaaăăăăăâââââeeeeeêêêêêiiiiioooooôôôôôơơơơơuuuuuưưưưưyyyyy');
+$$;
+-- Thanh của một tiếng
+create or replace function public.vn_tone(t text) returns text language sql immutable as $$
+  select case
+    when t ~ '[áắấéếíóốớúứý]' then 'sắc'
+    when t ~ '[àằầèềìòồờùừỳ]' then 'huyền'
+    when t ~ '[ảẳẩẻểỉỏổởủửỷ]' then 'hỏi'
+    when t ~ '[ãẵẫẽễĩõỗỡũữỹ]' then 'ngã'
+    when t ~ '[ạặậẹệịọộợụựỵ]' then 'nặng'
+    else 'ngang' end;
+$$;
+
+insert into public.words (text, emoji) values
+ ('dê','🐐'),('hổ','🐯'),('lợn','🐷'),('chim','🐦'),('cú','🦉'),('ếch','🐸'),('rắn','🐍'),('ong','🐝'),('kiến','🐜'),
+ ('bướm','🦋'),('sứa','🪼'),('mực','🦑'),('nai','🦌'),('heo','🐖'),('sói','🐺'),('cáo','🦊'),('chuột','🐭'),('vẹt','🦜'),
+ ('công','🦚'),('ngỗng','🪿'),('bê','🐮'),('cò','🦩'),
+ ('bánh','🍰'),('kem','🍦'),('kẹo','🍬'),('nho','🍇'),('dứa','🍍'),('lê','🍐'),('dừa','🥥'),('xôi','🍙'),('cơm','🍚'),
+ ('trứng','🥚'),('sữa','🍼'),('chè','🍵'),('nấm','🍄'),('tỏi','🧄'),('ngô','🌽'),('mì','🍝'),('đào','🍑'),('bí','🎃'),
+ ('cà','🍆'),('bơ','🥑'),('khoai','🍠'),('rau','🥬'),('lúa','🌾'),
+ ('ô','☂️'),('nơ','🎀'),('đèn','💡'),('chổi','🧹'),('kính','👓'),('áo','👕'),('váy','👗'),('giày','👟'),('tất','🧦'),
+ ('bóng','⚽'),('diều','🪁'),('thìa','🥄'),('đũa','🥢'),('nồi','🍲'),('chảo','🍳'),('túi','👜'),('nhẫn','💍'),('vở','📒'),
+ ('thước','📏'),('cặp','🎒'),('ghim','📌'),('kim','🪡'),('khoá','🔒'),('gương','🪞'),('giường','🛏️'),('cửa','🚪'),
+ ('tàu','🚢'),('nến','🕯️'),('quà','🎁'),('pháo','🎆'),('tranh','🖼️'),('đàn','🎸'),('kèn','🎺'),('sáo','🪈'),
+ ('chuông','🔔'),('cúp','🏆'),('lều','⛺'),('cầu','🌉'),('đá','🪨'),('ngọc','💎'),('pin','🔋'),('loa','🔊'),
+ ('trăng','🌙'),('mây','☁️'),('gió','🌬️'),('núi','⛰️'),('biển','🌊'),('nắng','☀️'),('tuyết','❄️'),('cỏ','🌿'),
+ ('tre','🎋'),('sen','🪷'),
+ ('mắt','👁️'),('tai','👂'),('mũi','👃'),('tay','✋'),('chân','🦵'),('răng','🦷'),('tim','❤️'),
+ ('bố','👨'),('ông','👴'),('chị','👧'),('cô','👩‍🏫'),('vua','🤴'),('hề','🤡'),('ma','👻'),
+ ('thư','✉️'),('hũ','🫙'),('tủ','🗄️'),('củ','🥕'),('ớt','🌶️'),('ngọt','🍭'),('sọt','🧺'),('cúc','🌼'),('hạc','🦢'),
+ ('bạn','🧑‍🤝‍🧑'),('tám','8️⃣'),('chăn','🛌'),('thịt','🍖'),('mứt','🍬'),('bột','🥣')
+on conflict (text) do nothing;
+
+-- sửa link sai từ bản cũ: "tôm" không có vần am
+delete from public.unit_words uw using public.units u, public.words w
+where uw.unit_id = u.id and uw.word_id = w.id and u.kind = 'van'
+  and ((u.value = 'am' and w.text = 'tôm') or (u.value = 'uc' and w.text = 'lọ mực'));
+
+-- Tự gắn mọi từ một tiếng vào âm đầu (âm phụ/ghép), âm chính, vần và thanh tương ứng.
+-- Âm đầu lấy theo khớp dài nhất (ngh > ng > n, gi > g, qu > q…). Mỗi mục tối đa 8 từ.
+insert into public.unit_words (unit_id, word_id)
+select unit_id, word_id from (
+  select c.unit_id, c.word_id,
+         row_number() over (partition by c.unit_id order by c.word_id) as rn,
+         (select count(*) from public.unit_words uw where uw.unit_id = c.unit_id) as have
+  from (
+    with p as (
+      select w.id, public.vn_base(w.text) as s, public.vn_tone(w.text) as tone
+      from public.words w where w.text !~ '\s'
+    ), q as (
+      select p.*, coalesce((
+        select u.value from public.units u
+        where u.kind = 'am' and u.subtype in ('phu','ghep') and p.s like u.value || '_%'
+        order by length(u.value) desc limit 1), '') as ini
+      from p
+    ), r as (select q.*, substr(q.s, length(q.ini) + 1) as rest from q)
+    select distinct u.id as unit_id, r.id as word_id
+    from r join public.units u on
+         (u.kind = 'am' and u.subtype in ('phu','ghep') and u.value = r.ini)
+      or (u.kind = 'am' and u.subtype = 'chinh' and u.value = r.rest)
+      or (u.kind = 'van' and u.value = r.rest)
+      or (u.kind = 'thanh' and u.value = r.tone)
+  ) c
+  where not exists (select 1 from public.unit_words uw where uw.unit_id = c.unit_id and uw.word_id = c.word_id)
+) z
+where rn + have <= 8
 on conflict do nothing;
 
 -- Tự sinh bài "Đúng – Sai" cho mọi âm/vần có ≥ 2 từ minh hoạ: 2 câu đúng + 1 câu sai (từ của âm/vần khác)
