@@ -1,0 +1,12 @@
+# docker compose up --build  →  http://localhost:8080
+# Đọc VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY từ file .env (copy từ .env.example)
+services:
+  web:
+    build:
+      context: .
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+    ports:
+      - "8080:80"
+    restart: unless-stopped
