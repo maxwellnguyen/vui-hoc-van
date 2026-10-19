@@ -3,7 +3,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { Whale } from '../components/ui'
 
 const ISLANDS = [
-  { to: '/am', title: 'Đảo Âm', desc: 'Âm chính · Âm phụ · Âm ghép', emoji: '🐚', color: 'from-lagoon to-ocean' },
+  { to: '/am', title: 'Đảo Âm', desc: 'Âm chính · Âm phụ · Phụ âm ghép', emoji: '🐚', color: 'from-lagoon to-ocean' },
   { to: '/van', title: 'Đảo Vần', desc: 'Đọc · Đúng – sai · Ghép vần', emoji: '🐙', color: 'from-aqua to-lagoon' },
   { to: '/thanh', title: 'Đảo Thanh', desc: 'Sắc · Huyền · Hỏi · Ngã · Nặng', emoji: '🐢', color: 'from-ocean to-ocean-deep' },
   { to: '/bai', title: 'Ôn tập theo bài', desc: 'Bảng vần · Ngôi sao · Đoạn văn', emoji: '⭐', color: 'from-star to-coral' },

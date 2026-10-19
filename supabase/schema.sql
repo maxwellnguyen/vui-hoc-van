@@ -168,7 +168,7 @@ insert into public.units (kind, subtype, value, order_index) values
  ('am','phu','k',7),('am','phu','l',8),('am','phu','m',9),('am','phu','n',10),('am','phu','p',11),('am','phu','q',12),
  ('am','phu','r',13),('am','phu','s',14),('am','phu','t',15),('am','phu','v',16),('am','phu','x',17)
 on conflict do nothing;
--- Âm ghép
+-- Phụ âm ghép
 insert into public.units (kind, subtype, value, order_index) values
  ('am','ghep','ch',1),('am','ghep','gh',2),('am','ghep','gi',3),('am','ghep','kh',4),('am','ghep','ng',5),
  ('am','ghep','ngh',6),('am','ghep','nh',7),('am','ghep','ph',8),('am','ghep','qu',9),('am','ghep','th',10),('am','ghep','tr',11)
@@ -177,7 +177,7 @@ on conflict do nothing;
 insert into public.units (kind, value, order_index) values
  ('van','ac',1),('van','ăc',2),('van','âc',3),('van','oc',4),('van','ôc',5),('van','uc',6),('van','ưc',7),
  ('van','at',8),('van','ăt',9),('van','ât',10),('van','ot',11),('van','ôt',12),('van','ơt',13),('van','ut',14),('van','ưt',15),
- ('van','an',16),('van','am',17),('van','eo',18),('van','ưa',19),('van','ơ',20)
+ ('van','an',16),('van','am',17),('van','eo',18),('van','ưa',19)
 on conflict do nothing;
 -- Thanh
 insert into public.units (kind, value, title, order_index) values
@@ -445,6 +445,45 @@ select u.id, w.id from (values
   ('van','eo','leo trèo')
 ) as x(kind, value, word)
 join public.units u on u.kind = x.kind and u.value = x.value
+join public.words w on w.text = x.word
+on conflict do nothing;
+
+-- "ơ" là âm chính, không phải vần → xoá khỏi danh sách vần (bài tập, từ gắn kèm tự xoá theo cascade)
+delete from public.units where kind = 'van' and value = 'ơ';
+
+-- ============ Vần 3: âm cuối ng + nhóm ăn ân ăm âm (để so sánh an–ăn–ân, am–ăm–âm) ============
+insert into public.units (kind, value, order_index) values
+ ('van','ong',21),('van','ông',22),('van','ung',23),('van','ưng',24),('van','ang',25),('van','ăng',26),('van','âng',27),
+ ('van','ăn',28),('van','ân',29),('van','ăm',30),('van','âm',31)
+on conflict do nothing;
+
+insert into public.words (text, emoji) values
+ ('bóng bay','🎈'),('vòng','💍'),('chong chóng','🎐'),('bóng đèn','💡'),('trống','🥁'),('cầu vồng','🌈'),
+ ('cái thùng','🪣'),('súng nước','🔫'),('trung thu','🏮'),('cung tên','🏹'),('khủng long','🦖'),
+ ('gừng','🫚'),('rừng cây','🌲'),('bánh chưng','🟩'),('sừng','🦏'),
+ ('vàng','🥇'),('trang sách','📖'),('càng cua','🦀'),('cái thang','🪜'),('sáng sớm','🌅'),
+ ('măng tre','🎋'),('băng giá','🧊'),('nắng','🌞'),
+ ('nhà tầng','🏢'),('vầng trăng','🌕'),('tâng bóng','⚽'),('dâng hoa','💐'),('vâng lời','🙇'),
+ ('ăn cơm','🍚'),('thằn lằn','🦎'),('mặn','🧂'),('cân','⚖️'),('sân trường','🏫'),
+ ('tắm','🛁'),('năm','5️⃣'),('con tằm','🐛'),('chăm sóc','🪴'),('gặm cỏ','🐐'),
+ ('mầm cây','🌱'),('cầm bút','✍️'),('đầm sen','🪷'),('ấm trà','🫖')
+on conflict (text) do nothing;
+
+insert into public.unit_words (unit_id, word_id)
+select u.id, w.id from (values
+  ('ong','ong'),('ong','bóng bay'),('ong','vòng'),('ong','chong chóng'),('ong','bóng đèn'),
+  ('ông','ông'),('ông','công'),('ông','rồng'),('ông','trống'),('ông','cầu vồng'),
+  ('ung','cái thùng'),('ung','súng nước'),('ung','trung thu'),('ung','cung tên'),('ung','khủng long'),
+  ('ưng','trứng'),('ưng','gừng'),('ưng','rừng cây'),('ưng','bánh chưng'),('ưng','sừng'),
+  ('ang','vàng'),('ang','trang sách'),('ang','càng cua'),('ang','cái thang'),('ang','sáng sớm'),
+  ('ăng','trăng'),('ăng','răng'),('ăng','măng tre'),('ăng','băng giá'),('ăng','nắng'),
+  ('âng','nhà tầng'),('âng','vầng trăng'),('âng','tâng bóng'),('âng','dâng hoa'),('âng','vâng lời'),
+  ('ăn','chăn'),('ăn','khăn'),('ăn','ăn cơm'),('ăn','thằn lằn'),('ăn','mặn'),
+  ('ân','chân'),('ân','cân'),('ân','sân trường'),('ân','quần'),('ân','phấn'),
+  ('ăm','tắm'),('ăm','năm'),('ăm','con tằm'),('ăm','chăm sóc'),('ăm','gặm cỏ'),
+  ('âm','nấm'),('âm','mầm cây'),('âm','cầm bút'),('âm','đầm sen'),('âm','ấm trà')
+) as x(value, word)
+join public.units u on u.kind = 'van' and u.value = x.value
 join public.words w on w.text = x.word
 on conflict do nothing;
 

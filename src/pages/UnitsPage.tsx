@@ -26,10 +26,10 @@ export function UnitsPage({ kind }: { kind: UnitKind }) {
     <div className="flex flex-col gap-6">
       <h1 className="font-display text-4xl font-extrabold">Đảo {UNIT_KIND_LABELS[kind]}</h1>
       {kind === 'am' && (
-        <div className="mx-auto grid w-full max-w-3xl grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="mx-auto grid w-full max-w-4xl grid-cols-1 gap-3 sm:grid-cols-3">
           {Object.entries(AM_SUBTYPE_LABELS).map(([k, v]) => (
             <button key={k} onClick={() => setSub(k)}
-              className={`flex items-center justify-center gap-3 rounded-[1.75rem] px-5 py-3 font-display text-2xl font-extrabold transition sm:text-3xl ${sub === k
+              className={`flex items-center justify-center gap-2 whitespace-nowrap rounded-[1.75rem] px-4 py-3 font-display text-2xl font-extrabold transition lg:text-3xl ${sub === k
                 ? 'scale-105 bg-ocean text-white shadow-[0_7px_0_#0B3D5C]'
                 : 'bg-white/85 text-ocean-deep shadow-[0_7px_0_#7FD6E0] hover:-translate-y-1'}`}>
               <span className="text-3xl sm:text-4xl">{SUBTYPE_EMOJI[k]}</span>{v}

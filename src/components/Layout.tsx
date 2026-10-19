@@ -8,7 +8,7 @@ export function Layout() {
   const link = ({ isActive }: { isActive: boolean }) =>
     `whitespace-nowrap rounded-xl px-2.5 py-2 font-display text-base font-bold xl:px-3 xl:text-lg ${isActive ? 'bg-white text-ocean-deep' : 'text-white hover:bg-white/20'}`
   const tab = ({ isActive }: { isActive: boolean }) =>
-    `flex min-h-14 min-w-16 flex-1 flex-col items-center justify-center rounded-2xl px-1 font-display text-sm font-bold ${isActive ? 'bg-white text-ocean-deep' : 'text-white active:bg-white/20'}`
+    `flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center rounded-2xl px-0.5 text-center font-display text-xs leading-tight font-bold sm:text-sm ${isActive ? 'bg-white text-ocean-deep' : 'text-white active:bg-white/20'}`
   const items = [
     { to: '/am', label: 'Âm', icon: '🔤' },
     { to: '/van', label: 'Vần', icon: '🧩' },

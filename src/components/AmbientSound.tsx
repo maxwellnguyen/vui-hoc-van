@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { useLocation } from 'react-router-dom'
 
 const KEY = 'ambient-sound'
 // Nhạc nền: đặt file vào public/audio/nhac-nen.mp3 (thiếu file thì chỉ có tiếng bong bóng)
@@ -43,11 +45,37 @@ function underwater(ctx: AudioContext, out: AudioNode) {
   src.start()
 }
 
+/** Nhạc trò chơi: giai điệu ngũ cung vui tươi lặp lại, tiếng "xylophone" nhỏ. */
+const TUNE = [0, 2, 4, 7, 9, 7, 4, 2, 4, 7, 9, 12, 9, 7, 4, -1]
+/** Nhạc nền tạm (khi chưa có file mp3): giai điệu chậm, êm, trầm hơn. */
+const CALM = [0, 4, 7, 4, 9, 7, 4, 2, -1, 2, 4, 7, 4, 2, 0, -1]
+function tune(ctx: AudioContext, out: AudioNode, notes: number[], ms: number, base: number, type: OscillatorType, vol: number, len: number) {
+  let i = 0
+  const id = window.setInterval(() => {
+    const n = notes[i++ % notes.length]
+    if (n < 0) return
+    const t = ctx.currentTime
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.type = type
+    osc.frequency.value = base * 2 ** (n / 12)
+    gain.gain.setValueAtTime(0.0001, t)
+    gain.gain.exponentialRampToValueAtTime(vol, t + 0.02)
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + len)
+    osc.connect(gain).connect(out)
+    osc.start(t)
+    osc.stop(t + len + 0.02)
+  }, ms)
+  return () => clearInterval(id)
+}
+
 /** Nhạc nền + tiếng bong bóng lách tách sau khi đăng nhập, có nút bật/tắt (nhớ lựa chọn). */
 export function AmbientSound() {
   const [on, setOn] = useState(() => {
     try { return localStorage.getItem(KEY) !== 'off' } catch { return true }
   })
+  const [blocked, setBlocked] = useState(false)
+  const game = useLocation().pathname.startsWith('/tro-choi/')
 
   useEffect(() => {
     try { localStorage.setItem(KEY, on ? 'on' : 'off') } catch { /* bỏ qua */ }
@@ -60,6 +88,11 @@ export function AmbientSound() {
     out.gain.value = 0.7
     out.connect(ctx.destination)
     underwater(ctx, out)
+    const stopTune = game ? tune(ctx, out, TUNE, 220, 523.25, 'triangle', 0.06, 0.3) : () => {}
+    let stopCalm = () => {}
+    // chưa có file mp3 → phát nhạc nền tạm tổng hợp
+    music.addEventListener('error', () => { if (!game) stopCalm = tune(ctx, out, CALM, 600, 392, 'triangle', 0.18, 1.2) })
+    if (game) music.volume = 0.08
     let timer = 0
     const loop = () => {
       // thỉnh thoảng một chùm 2–3 bong bóng liên tiếp
@@ -68,22 +101,53 @@ export function AmbientSound() {
       timer = window.setTimeout(loop, 2500 + Math.random() * 4000)
     }
     // trình duyệt chặn tự phát khi chưa chạm: thử ngay, nếu bị chặn thì phát ở lần chạm đầu tiên
-    const start = () => { music.play().catch(() => {}); ctx.resume() }
-    start()
-    window.addEventListener('pointerdown', start, { once: true })
+    const start = () => {
+      music.play().catch(() => {})
+      ctx.resume().then(() => setBlocked(false))
+      window.removeEventListener('pointerdown', start)
+      window.removeEventListener('keydown', start)
+    }
+    music.play().catch(() => {})
+    ctx.resume()
+    // chờ một nhịp: nếu trình duyệt vẫn chặn thì báo cho bé chạm vào màn hình
+    const check = window.setTimeout(() => setBlocked(ctx.state !== 'running'), 300)
+    window.addEventListener('pointerdown', start)
+    window.addEventListener('keydown', start)
     loop()
     return () => {
       window.removeEventListener('pointerdown', start)
+      window.removeEventListener('keydown', start)
+      clearTimeout(check)
+      setBlocked(false)
       clearTimeout(timer)
+      stopTune()
+      stopCalm()
       music.pause()
       ctx.close()
     }
-  }, [on])
+  }, [on, game])
 
   return (
+    <>
+    {/* Trình duyệt chặn âm thanh khi chưa chạm → màn chào: bấm một lần là có nhạc (pointerdown ở window sẽ bật) */}
+    {blocked && createPortal(
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-ocean-deep/70 p-4 backdrop-blur-sm">
+        <button autoFocus onClick={() => setBlocked(false)}
+          className="flex min-h-11 flex-col items-center gap-2 rounded-[2rem] bg-white px-10 py-8 font-display text-3xl font-extrabold text-ocean-deep shadow-[0_8px_0_#7FD6E0] transition active:translate-y-1 sm:text-4xl">
+          <span className="animate-bob text-7xl">🐳</span>
+          Bấm để bắt đầu
+        </button>
+        <button onClick={() => setOn(false)} className="min-h-11 px-4 font-bold text-white underline">
+          Học không có nhạc
+        </button>
+      </div>,
+      document.body,
+    )}
     <button onClick={() => setOn((v) => !v)} aria-label={on ? 'Tắt nhạc nền' : 'Bật nhạc nền'} aria-pressed={on}
-      className="min-h-11 min-w-11 rounded-xl px-2 text-xl hover:bg-white/10">
+      title={blocked ? 'Chạm vào màn hình để nghe nhạc' : undefined}
+      className={`min-h-11 min-w-11 rounded-xl px-2 text-xl hover:bg-white/10 ${blocked ? 'animate-pulse bg-white/20' : ''}`}>
       {on ? '🔊' : '🔇'}
     </button>
+    </>
   )
 }

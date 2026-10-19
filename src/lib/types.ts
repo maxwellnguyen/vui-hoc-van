@@ -29,7 +29,7 @@ export interface Exercise {
 export interface Attempt { id: number; user_id: string; exercise_id: number; score: number; stars: number; created_at: string }
 
 export const UNIT_KIND_LABELS: Record<UnitKind, string> = { am: 'Âm', van: 'Vần', thanh: 'Thanh' }
-export const AM_SUBTYPE_LABELS: Record<string, string> = { chinh: 'Âm chính', phu: 'Âm phụ', ghep: 'Âm ghép' }
+export const AM_SUBTYPE_LABELS: Record<string, string> = { chinh: 'Âm chính', phu: 'Âm phụ', ghep: 'Phụ âm ghép' }
 
 export const EXERCISE_LABELS: Record<ExerciseType, string> = {
   read: 'Đọc', trace: 'Tô / đồ chữ', true_false: 'Đúng – Sai', build: 'Ghép',
