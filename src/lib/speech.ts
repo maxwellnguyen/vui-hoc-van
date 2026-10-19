@@ -1,7 +1,7 @@
 /**
  * Đọc tiếng Việt:
- *  1. Máy có sẵn giọng vi-VN (Edge, Windows/macOS/Android đã cài) → Web Speech API.
- *  2. Không có → tự dùng giọng online qua /api/tts (mp3), mọi máy đều nghe được, không cần cài gì.
+ *  1. Có mạng → giọng online qua /api/tts (mp3), mọi máy đều nghe được, không cần cài gì.
+ *  2. Mất mạng / API lỗi → giọng vi-VN cài sẵn trên máy (Web Speech API).
  */
 import { applyTone } from './vietnamese'
 
@@ -35,7 +35,8 @@ export function speak(text: string, opts: SpeakOptions = {}) {
   const id = ++session
   // vần đứng riêng tận cùng c/t/p/ch (ăc, ôt…) không thanh thì máy đọc sai → đọc kèm thanh sắc
   if (/^[^\s\u0300\u0301\u0303\u0309\u0323]+(c|t|p|ch)$/i.test(text.normalize('NFD'))) text = applyTone(text, '´')
-  if (hasVietnameseVoice()) speakNative(text, opts, id)
+  // giọng online (Google) đọc rõ thanh hỏi/ngã hơn giọng cài sẵn của Windows → ưu tiên khi có mạng
+  if (!navigator.onLine && hasVietnameseVoice()) speakNative(text, opts, id)
   else speakOnline(text, opts, id)
 }
 

@@ -19,7 +19,7 @@ function bubble(ctx: AudioContext, out: AudioNode) {
   osc.frequency.setValueAtTime(f, t)
   osc.frequency.exponentialRampToValueAtTime(f * 1.8, t + dur)
   gain.gain.setValueAtTime(0, t)
-  gain.gain.linearRampToValueAtTime(0.05 + size * 0.04, t + 0.005)
+  gain.gain.linearRampToValueAtTime(0.09 + size * 0.06, t + 0.005)
   gain.gain.exponentialRampToValueAtTime(0.0001, t + dur)
   pan.pan.value = Math.random() * 1.6 - 0.8
   osc.connect(gain).connect(pan).connect(out)
@@ -82,17 +82,17 @@ export function AmbientSound() {
     if (!on) return
     const music = new Audio(MUSIC_SRC)
     music.loop = true
-    music.volume = 0.2
+    music.volume = 0.1
     const ctx = new AudioContext()
     const out = ctx.createGain()
     out.gain.value = 0.7
     out.connect(ctx.destination)
     underwater(ctx, out)
-    const stopTune = game ? tune(ctx, out, TUNE, 220, 523.25, 'triangle', 0.06, 0.3) : () => {}
+    const stopTune = game ? tune(ctx, out, TUNE, 220, 523.25, 'triangle', 0.03, 0.3) : () => {}
     let stopCalm = () => {}
     // chưa có file mp3 → phát nhạc nền tạm tổng hợp
-    music.addEventListener('error', () => { if (!game) stopCalm = tune(ctx, out, CALM, 600, 392, 'triangle', 0.18, 1.2) })
-    if (game) music.volume = 0.08
+    music.addEventListener('error', () => { if (!game) stopCalm = tune(ctx, out, CALM, 600, 392, 'triangle', 0.09, 1.2) })
+    if (game) music.volume = 0.04
     let timer = 0
     const loop = () => {
       // thỉnh thoảng một chùm 2–3 bong bóng liên tiếp
