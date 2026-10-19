@@ -34,7 +34,7 @@ export function TrueFalse({ config, allWords, onFinish }: ExerciseProps<TrueFals
       <div key={i} className="flex animate-pop flex-col items-center gap-3">
         <WordImage emoji={word?.emoji} imageUrl={word?.image_url} text={item.word} className="h-36 w-36 text-8xl" />
         <div className="flex items-center gap-3">
-          <p className="text-center font-display text-3xl font-bold">{item.statement}</p>
+          <p className="text-center font-display text-2xl font-bold sm:text-3xl">{item.statement}</p>
           <SpeakerButton text={item.statement} size="sm" />
         </div>
       </div>

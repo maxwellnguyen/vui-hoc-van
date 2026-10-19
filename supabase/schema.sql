@@ -398,6 +398,56 @@ select unit_id, word_id from (
 where rn + have <= 8
 on conflict do nothing;
 
+-- ============ BỔ SUNG: mỗi âm / vần có ít nhất 5 từ ví dụ ============
+insert into public.words (text, emoji) values
+ ('máy bay','✈️'),('gỗ','🪵'),('gậy','🦯'),('búp bê','🪆'),('kẹp','📎'),('quần','👖'),('rồng','🐉'),('xoài','🥭'),
+ ('xương','🦴'),('ghẹ','🦀'),('ghe','🛶'),('ghép hình','🧩'),('giỏ','🧺'),('giấy','📄'),('khăn','🧣'),('nghệ','🫚'),
+ ('nghêu','🦪'),('nghe nhạc','🎧'),('nghỉ hè','🏖️'),('phấn','🖍️'),('phao','🛟'),('bạc','🪙'),('thác','🏞️'),
+ ('tắc kè','🦎'),('mặc áo','👚'),('lúc lắc','🪇'),('mắc áo','🧥'),('giấc ngủ','😴'),('bậc thang','🪜'),('quả gấc','🍅'),
+ ('nhấc chân','🦵'),('cóc','🐸'),('tóc','💇'),('gốc cây','🪵'),('lốc xoáy','🌪️'),('chúc mừng','🎉'),('cục tẩy','🧽'),
+ ('lục lạc','🔔'),('thức dậy','⏰'),('bức tranh','🖼️'),('rực rỡ','🌈'),('hát','🎤'),('cát','🏖️'),('mặt trời','☀️'),
+ ('sắt','🔩'),('cắt tóc','💇'),('đất','🌍'),('lật đật','🪆'),('rót','🫗'),('giọt nước','💧'),('cà rốt','🥕'),('một','1️⃣'),
+ ('nốt nhạc','🎵'),('vợt','🏸'),('thớt','🔪'),('mũ phớt','🎩'),('nút','🔘'),('phút','⏱️'),('sút bóng','⚽'),
+ ('mứt dừa','🥥'),('vứt rác','🗑️'),('đứt dây','🧵'),('nứt nẻ','🏜️'),('ngan','🦆'),('bàn chải','🪥'),('nam châm','🧲'),
+ ('khám bệnh','🩺'),('đám mây','☁️'),('leo trèo','🧗')
+on conflict (text) do nothing;
+
+-- "bắp" là vần ăp, không phải ăc
+delete from public.unit_words uw using public.units u, public.words w
+where uw.unit_id = u.id and uw.word_id = w.id and u.kind = 'van' and u.value = 'ăc' and w.text = 'bắp';
+
+insert into public.unit_words (unit_id, word_id)
+select u.id, w.id from (values
+  ('am','ă','rắn'),('am','ă','trăng'),('am','ă','chăn'),('am','ă','răng'),('am','ă','mắt'),
+  ('am','â','gấu'),('am','â','cây'),('am','â','mây'),('am','â','chân'),('am','â','nấm'),
+  ('am','i','tim'),('am','ư','sữa'),('am','ư','mưa'),('am','ư','dưa'),('am','ư','trứng'),
+  ('am','y','váy'),('am','y','tay'),('am','y','mây'),('am','y','giày'),('am','y','máy bay'),
+  ('am','g','gỗ'),('am','g','gậy'),
+  ('am','p','cặp'),('am','p','bắp'),('am','p','búp bê'),('am','p','kẹp'),
+  ('am','q','quà'),('am','q','quả na'),('am','q','quả ớt'),('am','q','quần'),
+  ('am','r','rồng'),('am','x','xoài'),('am','x','xương'),('am','x','xúc xắc'),
+  ('am','gh','ghẹ'),('am','gh','ghe'),('am','gh','ghép hình'),('am','gi','giỏ'),('am','gi','giấy'),
+  ('am','kh','khăn'),('am','ngh','nghệ'),('am','ngh','nghêu'),('am','ngh','nghe nhạc'),('am','ngh','nghỉ hè'),
+  ('am','ph','phấn'),('am','ph','phao'),('am','qu','quần'),('am','qu','quả ớt'),
+  ('van','ac','bạc'),('van','ac','thác'),
+  ('van','ăc','tắc kè'),('van','ăc','mặc áo'),('van','ăc','lúc lắc'),('van','ăc','mắc áo'),
+  ('van','âc','giấc ngủ'),('van','âc','bậc thang'),('van','âc','quả gấc'),('van','âc','nhấc chân'),
+  ('van','oc','cóc'),('van','oc','tóc'),('van','ôc','gốc cây'),('van','ôc','lốc xoáy'),
+  ('van','uc','xúc xắc'),('van','uc','chúc mừng'),('van','uc','cục tẩy'),('van','uc','lục lạc'),
+  ('van','ưc','thức dậy'),('van','ưc','bức tranh'),('van','ưc','rực rỡ'),
+  ('van','at','hát'),('van','at','cát'),('van','ăt','mặt trời'),('van','ăt','sắt'),('van','ăt','cắt tóc'),
+  ('van','ât','đất'),('van','ât','lật đật'),('van','ot','rót'),('van','ot','giọt nước'),
+  ('van','ôt','cà rốt'),('van','ôt','một'),('van','ôt','nốt nhạc'),('van','ôt','cột mốc'),
+  ('van','ơt','vợt'),('van','ơt','thớt'),('van','ơt','mũ phớt'),
+  ('van','ut','nút'),('van','ut','phút'),('van','ut','sút bóng'),('van','ut','bút chì'),
+  ('van','ưt','mứt dừa'),('van','ưt','vứt rác'),('van','ưt','đứt dây'),('van','ưt','nứt nẻ'),
+  ('van','an','ngan'),('van','an','bàn chải'),('van','am','nam châm'),('van','am','khám bệnh'),('van','am','đám mây'),
+  ('van','eo','leo trèo')
+) as x(kind, value, word)
+join public.units u on u.kind = x.kind and u.value = x.value
+join public.words w on w.text = x.word
+on conflict do nothing;
+
 -- Tự sinh bài "Đúng – Sai" cho mọi âm/vần có ≥ 2 từ minh hoạ: 2 câu đúng + 1 câu sai (từ của âm/vần khác)
 insert into public.exercises (unit_id, type, title, config, order_index)
 select u.id, 'true_false', 'Đúng hay sai? (' || u.value || ')',

@@ -135,18 +135,85 @@ const SIDE_CREATURES: Creature[] = [
   { emoji: '🦭', bottom: '6%', right: '28%', size: 'text-6xl', anim: 'creature-bob', dur: 4.2, delay: 1.2 },
 ]
 
-const SEAWEED = ['3%', '16%', '34%', '64%', '82%', '95%']
+// Rạn san hô SVG nhiều lớp (cành mập có viền tối + vệt sáng, quạt lưới, san hô não, đá, cát)
+const CORAL_SHAPES = {
+  stag: 'M50 120V72M50 92L30 62V36M30 62L17 47V28M50 82L70 56V30M70 56L84 41V22M50 72L46 40V14M46 40L58 26',
+  fan: 'M50 120V84M50 84L22 50L14 20M22 50L30 24M50 84L40 40L38 10M50 84L60 40L64 12M50 84L78 50L86 22M78 50L70 26M40 40L48 18',
+  tube: 'M30 120V58M45 120V34M60 120V48M75 120V66M52 120V20',
+  bush: 'M50 120V90M50 90Q30 80 26 60M50 90Q70 80 74 60M26 60Q18 50 20 36M26 60Q36 50 34 38M74 60Q66 50 68 36M74 60Q84 50 80 38M50 90V54M50 54Q42 44 44 30M50 54Q58 44 56 30',
+}
+const FAN_FILL = 'M50 112L12 52L10 18L40 6L66 8L90 20L86 54Z'
+const shade = (c: string, k: string, p: number) => `color-mix(in srgb, ${c} ${p}%, ${k})`
+type CoralKind = keyof typeof CORAL_SHAPES | 'brain'
+
+function Coral({ kind, color, sw }: { kind: CoralKind; color: string; sw: number }) {
+  if (kind === 'brain') return (
+    <svg viewBox="0 0 100 60" className="h-full w-full">
+      <path d="M4 60Q2 14 50 8Q98 14 96 60Z" style={{ fill: color, stroke: shade(color, 'black', 70), strokeWidth: 3 }} />
+      <path d="M18 52Q20 30 34 24Q46 34 50 20Q56 34 66 24Q80 30 82 52M30 56Q34 40 44 38Q50 46 58 38Q68 42 70 56"
+        fill="none" style={{ stroke: shade(color, 'black', 65) }} strokeWidth="2.5" strokeLinecap="round" />
+      <ellipse cx="38" cy="20" rx="14" ry="5" style={{ fill: shade(color, 'white', 50) }} opacity=".5" />
+    </svg>
+  )
+  const d = CORAL_SHAPES[kind]
+  return (
+    <svg viewBox="0 0 100 120" className="h-full w-full" overflow="visible">
+      {kind === 'fan' && <path d={FAN_FILL} style={{ fill: color }} opacity=".35" />}
+      <path d={d} fill="none" style={{ stroke: shade(color, 'black', 70) }} strokeWidth={sw + 4} strokeLinecap="round" strokeLinejoin="round" />
+      <path d={d} fill="none" style={{ stroke: color }} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" />
+      <path d={d} fill="none" style={{ stroke: shade(color, 'white', 45) }} strokeWidth={Math.max(1.5, sw * 0.3)} strokeLinecap="round"
+        strokeDasharray="2 7" opacity=".9" transform="translate(-1.5 0)" />
+    </svg>
+  )
+}
+
+// [vị trí ngang, cạnh, loại, màu, chiều cao (vh), độ dày nét, lớp sau?]
+const REEF: [string, 'left' | 'right', CoralKind, string, number, number, boolean?][] = [
+  // lớp sau (nhạt, xanh hơn)
+  ['4%', 'left', 'fan', '#7FA7E0', 40, 4, true], ['18%', 'left', 'stag', '#9C8BD9', 30, 7, true], ['30%', 'left', 'tube', '#6FC3C9', 18, 8, true],
+  ['3%', 'right', 'stag', '#7FA7E0', 38, 7, true], ['17%', 'right', 'fan', '#9C8BD9', 32, 4, true], ['29%', 'right', 'bush', '#6FC3C9', 18, 7, true],
+  // lớp trước (rực rỡ)
+  ['-3%', 'left', 'stag', '#FF9F43', 32, 10], ['8%', 'left', 'fan', '#F78FB3', 36, 5], ['15%', 'left', 'tube', '#A55EEA', 20, 11],
+  ['21%', 'left', 'bush', '#FECA57', 24, 9], ['1%', 'left', 'bush', '#48DBFB', 16, 10], ['27%', 'left', 'stag', '#FF6B81', 16, 11],
+  ['12%', 'left', 'brain', '#C56CF0', 8, 0], ['24%', 'left', 'brain', '#FFB8B8', 6, 0],
+  ['-3%', 'right', 'fan', '#FF9F43', 36, 5], ['8%', 'right', 'stag', '#5F9DF7', 30, 10], ['16%', 'right', 'bush', '#F78FB3', 24, 9],
+  ['22%', 'right', 'tube', '#FECA57', 20, 11], ['2%', 'right', 'tube', '#A55EEA', 15, 12], ['27%', 'right', 'fan', '#FF6B81', 17, 5],
+  ['12%', 'right', 'brain', '#FF9F43', 7, 0], ['24%', 'right', 'brain', '#C56CF0', 8, 0],
+]
+
+const ROCK = 'M0 30V14Q8 2 20 10Q30 0 44 9Q56 2 68 12Q82 6 100 20V30Z'
+
+/** Rạn san hô hai bên đáy biển; hiện trên mọi màn hình (mobile nhỏ hơn). */
+export function CoralReef() {
+  return (
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 -z-10 h-[45vh] overflow-hidden opacity-70 [--reef:0.55vh] sm:opacity-100 sm:[--reef:1vh]" aria-hidden>
+      {/* cát */}
+      <div className="absolute inset-x-0 bottom-0 h-[5vh] bg-gradient-to-t from-[#E9D7B0] to-[#E9D7B0]/0" />
+      {/* đá */}
+      {(['left', 'right'] as const).map((side) => (
+        <svg key={side} style={{ [side]: 0 }} className={`absolute bottom-0 h-[10vh] w-[36%] ${side === 'right' ? '-scale-x-100' : ''}`} viewBox="0 0 100 30" preserveAspectRatio="none">
+          <path d={ROCK} fill="#7A4E8F" />
+          <path d={ROCK} fill="#9D6AB0" transform="translate(0 4)" />
+          <circle cx="24" cy="20" r="2" fill="#6A3F7E" /><circle cx="60" cy="18" r="1.5" fill="#6A3F7E" /><circle cx="78" cy="24" r="2" fill="#6A3F7E" />
+        </svg>
+      ))}
+      {REEF.map(([pos, side, kind, color, h, sw, back], i) => (
+        <span key={i} className={`creature bottom-[2vh] ${kind === 'brain' ? '' : 'creature-sway'} ${back ? 'opacity-60' : ''}`}
+          style={{ [side]: pos, height: `min(calc(${h} * var(--reef)), ${h * 9}px)`, aspectRatio: kind === 'brain' ? '100 / 60' : '100 / 120',
+            animationDuration: `${4 + (i % 4)}s`, animationDelay: `${i * .3}s`, filter: back ? 'blur(.5px)' : undefined }}>
+          <Coral kind={kind} color={color} sw={sw} />
+        </span>
+      ))}
+    </div>
+  )
+}
 
 /** Sinh vật biển trang trí hai bên (ẩn trên màn hình nhỏ để không che form). */
 export function SeaCreatures() {
   return (
+    <>
+    <CoralReef />
     <div className="pointer-events-none fixed inset-0 -z-10 hidden overflow-hidden lg:block" aria-hidden>
-      {SEAWEED.map((left, i) => (
-        <span key={`w${i}`} className="creature creature-sway bottom-0 text-6xl"
-          style={{ left, animationDuration: `${3 + (i % 3)}s`, animationDelay: `${i * .4}s` }}>
-          {i % 2 ? '🪸' : '🌿'}
-        </span>
-      ))}
       {SIDE_CREATURES.map((c, i) => (
         <span key={i} className={`creature ${c.anim} ${c.size}`}
           style={{ top: c.top, bottom: c.bottom, left: c.left, right: c.right, animationDuration: `${c.dur}s`, animationDelay: `${c.delay ?? 0}s` }}>
@@ -154,6 +221,7 @@ export function SeaCreatures() {
         </span>
       ))}
     </div>
+    </>
   )
 }
 
