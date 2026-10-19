@@ -1,4 +1,4 @@
-import { useId, type ButtonHTMLAttributes, type ReactNode } from 'react'
+import { useId, useMemo, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { speak } from '../lib/speech'
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success'
@@ -154,7 +154,60 @@ type CoralKind = keyof typeof CORAL_SHAPES | 'brain' | 'puff' | 'weed'
 // san hô mềm dạng bông cải: các cụm tròn chồng nhau [cx, cy, r]
 const PUFF: [number, number, number][] = [[50, 92, 26], [26, 96, 18], [74, 96, 18], [36, 70, 20], [64, 70, 20], [50, 50, 20], [30, 50, 13], [70, 50, 13], [50, 30, 13]]
 
-function Coral({ kind, color, sw }: { kind: CoralKind; color: string; sw: number }) {
+// San hô sừng hươu như ảnh mẫu: cành dày, cong, chẻ đôi/ba nhiều tầng, thon dần, nốt sần dọc cành (seed cố định)
+type Seg = [number, number, number, number, number, number, number] // x1 y1 qx qy x2 y2 độ dày
+const GROW = {
+  stag: { depth: 3, len: 28, spread: .55, w: 19, trunks: 3 },
+  tube: { depth: 4, len: 20, spread: .7, w: 12, trunks: 2 },  // nhánh mảnh xoè rộng (san hô xanh)
+  bush: { depth: 2, len: 22, spread: .95, w: 17, trunks: 4 }, // bụi thấp, dày
+}
+function growCoral(seed: number, style: keyof typeof GROW) {
+  let s = seed * 9301 + 49297
+  const r = () => (s = (s * 16807) % 2147483647) / 2147483647
+  const c = GROW[style], segs: Seg[] = [], tips: [number, number, number][] = []
+  const go = (x: number, y: number, a: number, len: number, w: number, d: number) => {
+    a = Math.max(-1.25, Math.min(1.25, a))
+    const x2 = x + Math.sin(a) * len, y2 = y - Math.cos(a) * len, bend = (r() - .5) * len * .45
+    segs.push([x, y, (x + x2) / 2 + bend, (y + y2) / 2, x2, y2, w])
+    if (d <= 0) { tips.push([x2, y2, w * .4]); return }
+    const n = r() < .3 ? 3 : 2
+    for (let i = 0; i < n; i++) go(x2, y2, a * .85 + (i - (n - 1) / 2) * c.spread * (.7 + r() * .6), len * (.7 + r() * .18), w * .74, d - 1)
+  }
+  for (let t = 0; t < c.trunks; t++) go(50 + (t - (c.trunks - 1) / 2) * 8, 120, (t - (c.trunks - 1) / 2) * .35 + (r() - .5) * .3, c.len * (.8 + r() * .4), c.w, c.depth - (t % 2))
+  // khung nhìn ôm sát cành → san hô luôn đầy ô chứa, gốc chạm đáy
+  const xs = segs.flatMap((g) => [g[0], g[4]]), ys = segs.map((g) => g[5])
+  const minX = Math.min(...xs) - 6, maxX = Math.max(...xs) + 6, minY = Math.min(...ys) - 6
+  return { segs, tips, box: `${minX} ${minY} ${maxX - minX} ${120 - minY}` }
+}
+
+function BranchCoral({ kind, color, seed }: { kind: keyof typeof GROW; color: string; seed: number }) {
+  const id = useId()
+  const dark = shade(color, '#1b1440', 55), light = shade(color, 'white', 55)
+  const { segs, tips, box } = useMemo(() => growCoral(seed, kind), [seed, kind])
+  const path = (g: Seg) => `M${g[0]} ${g[1]}Q${g[2]} ${g[3]} ${g[4]} ${g[5]}`
+  const at = (g: Seg, t: number, i: number) => (1 - t) ** 2 * g[i] + 2 * (1 - t) * t * g[i + 2] + t * t * g[i + 4]
+  return (
+    <svg viewBox={box} preserveAspectRatio="xMidYMax meet" className="h-full w-full" overflow="visible">
+      <defs><linearGradient id={id} x1="0" y1="120" x2="0" y2="0" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stopColor={dark} /><stop offset=".4" stopColor={color} /><stop offset="1" stopColor={light} /></linearGradient></defs>
+      {/* bóng bên phải → khối 3D */}
+      {segs.map((g, i) => <path key={`s${i}`} d={path(g)} transform="translate(1.4 .6)" fill="none" stroke={dark} strokeWidth={g[6]} strokeLinecap="round" opacity=".55" />)}
+      {segs.map((g, i) => <path key={`b${i}`} d={path(g)} fill="none" stroke={`url(#${id})`} strokeWidth={g[6]} strokeLinecap="round" />)}
+      {segs.map((g, i) => <path key={`h${i}`} d={path(g)} transform={`translate(${-g[6] * .22} 0)`} fill="none" stroke="white" strokeWidth={g[6] * .2} strokeLinecap="round" opacity=".3" />)}
+      {/* nốt sần (polyp) dọc cành */}
+      {segs.map((g, i) => g[6] > 3 && [.3, .7].map((t) => (
+        <circle key={`p${i}${t}`} cx={at(g, t, 0) + (t > .5 ? 1 : -1) * g[6] * .3} cy={at(g, t, 1)} r={g[6] * .16} fill={dark} opacity=".35" />)))}
+      {tips.map(([x, y, w], i) => <circle key={`t${i}`} cx={x} cy={y} r={w} fill={light} />)}
+    </svg>
+  )
+}
+
+function Coral({ kind, color, sw, seed }: { kind: CoralKind; color: string; sw: number; seed: number }) {
+  if (kind === 'stag' || kind === 'tube' || kind === 'bush') return <BranchCoral kind={kind} color={color} seed={seed} />
+  return <OtherCoral kind={kind} color={color} sw={sw} />
+}
+
+function OtherCoral({ kind, color, sw }: { kind: CoralKind; color: string; sw: number }) {
   const id = useId()
   const dark = shade(color, '#1b1440', 55), light = shade(color, 'white', 55)
   if (kind === 'brain') return (
@@ -206,18 +259,15 @@ function Coral({ kind, color, sw }: { kind: CoralKind; color: string; sw: number
 // [vị trí ngang, cạnh, loại, màu, chiều cao (vh), độ dày nét, lớp sau?]
 const REEF: [string, 'left' | 'right', CoralKind, string, number, number, boolean?][] = [
   // lớp sau (nhạt, xanh hơn)
-  ['4%', 'left', 'fan', '#7FA7E0', 40, 4, true], ['18%', 'left', 'stag', '#9C8BD9', 30, 7, true], ['30%', 'left', 'tube', '#6FC3C9', 18, 8, true],
-  ['3%', 'right', 'stag', '#7FA7E0', 38, 7, true], ['17%', 'right', 'fan', '#9C8BD9', 32, 4, true], ['29%', 'right', 'bush', '#6FC3C9', 18, 7, true],
-  // lớp trước (rực rỡ)
-  ['-3%', 'left', 'stag', '#FF9F43', 32, 10], ['8%', 'left', 'fan', '#F78FB3', 36, 5], ['15%', 'left', 'tube', '#A55EEA', 20, 11],
-  ['21%', 'left', 'bush', '#FECA57', 24, 9], ['1%', 'left', 'bush', '#48DBFB', 16, 10], ['27%', 'left', 'stag', '#FF6B81', 16, 11],
-  ['12%', 'left', 'brain', '#C56CF0', 8, 0], ['24%', 'left', 'brain', '#FFB8B8', 6, 0],
-  ['-3%', 'right', 'fan', '#FF9F43', 36, 5], ['8%', 'right', 'stag', '#5F9DF7', 30, 10], ['16%', 'right', 'bush', '#F78FB3', 24, 9],
-  ['22%', 'right', 'tube', '#FECA57', 20, 11], ['2%', 'right', 'tube', '#A55EEA', 15, 12], ['27%', 'right', 'fan', '#FF6B81', 17, 5],
-  ['12%', 'right', 'brain', '#FF9F43', 7, 0], ['24%', 'right', 'brain', '#C56CF0', 8, 0],
-  // san hô mềm + rong biển cho rạn dày, mềm mại
-  ['5%', 'left', 'puff', '#FF8FAB', 14, 0], ['31%', 'left', 'puff', '#FFB86B', 10, 0], ['-2%', 'left', 'weed', '#3FB37F', 30, 0], ['34%', 'left', 'weed', '#2EA88A', 22, 0],
-  ['6%', 'right', 'puff', '#B794F6', 13, 0], ['31%', 'right', 'puff', '#FF8FAB', 10, 0], ['-2%', 'right', 'weed', '#2EA88A', 28, 0], ['34%', 'right', 'weed', '#3FB37F', 20, 0],
+  ['4%', 'left', 'fan', '#7FA7E0', 40, 4, true], ['18%', 'left', 'stag', '#8FB8D8', 34, 0, true], ['30%', 'left', 'tube', '#6FC3C9', 22, 0, true],
+  ['3%', 'right', 'stag', '#8FB8D8', 40, 0, true], ['17%', 'right', 'fan', '#9C8BD9', 32, 4, true], ['29%', 'right', 'bush', '#6FC3C9', 20, 0, true],
+  // lớp trước: tông màu như ảnh mẫu (hồng san hô, cam, vàng, xanh dương)
+  ['-4%', 'left', 'stag', '#F2848A', 36, 0], ['9%', 'left', 'stag', '#F59A3E', 28, 0], ['20%', 'left', 'bush', '#EBC35A', 22, 0],
+  ['1%', 'left', 'bush', '#F59A3E', 18, 0], ['28%', 'left', 'stag', '#F2848A', 18, 0], ['15%', 'left', 'tube', '#E58FB0', 20, 0],
+  ['12%', 'left', 'brain', '#D97BA0', 8, 0], ['25%', 'left', 'brain', '#8DBA4A', 7, 0],
+  ['-4%', 'right', 'stag', '#F59A3E', 38, 0], ['9%', 'right', 'tube', '#4F9BE0', 26, 0], ['17%', 'right', 'stag', '#F2848A', 26, 0],
+  ['24%', 'right', 'bush', '#EBC35A', 22, 0], ['2%', 'right', 'bush', '#EBC35A', 18, 0], ['30%', 'right', 'stag', '#F59A3E', 16, 0],
+  ['12%', 'right', 'brain', '#8DBA4A', 7, 0], ['26%', 'right', 'brain', '#D97BA0', 8, 0],
 ]
 
 const ROCK = 'M0 30V14Q8 2 20 10Q30 0 44 9Q56 2 68 12Q82 6 100 20V30Z'
@@ -230,9 +280,9 @@ export function CoralReef() {
       <div className="absolute inset-x-0 bottom-0 h-[5vh] bg-gradient-to-t from-[#E9D7B0] to-[#E9D7B0]/0" />
       {/* đá */}
       {(['left', 'right'] as const).map((side) => (
-        <svg key={side} style={{ [side]: 0 }} className={`absolute bottom-0 h-[10vh] w-[36%] ${side === 'right' ? '-scale-x-100' : ''}`} viewBox="0 0 100 30" preserveAspectRatio="none">
-          <path d={ROCK} fill="#7A4E8F" />
-          <path d={ROCK} fill="#9D6AB0" transform="translate(0 4)" />
+        <svg key={side} style={{ [side]: 0 }} className={`absolute bottom-0 h-[13vh] w-[38%] ${side === 'right' ? '-scale-x-100' : ''}`} viewBox="0 0 100 30" preserveAspectRatio="none">
+          <path d={ROCK} fill="#7E4F7A" />
+          <path d={ROCK} fill="#A86E9C" transform="translate(0 4)" />
           <circle cx="24" cy="20" r="2" fill="#6A3F7E" /><circle cx="60" cy="18" r="1.5" fill="#6A3F7E" /><circle cx="78" cy="24" r="2" fill="#6A3F7E" />
         </svg>
       ))}
@@ -240,7 +290,7 @@ export function CoralReef() {
         <span key={i} className={`creature bottom-[2vh] ${kind === 'brain' ? '' : 'creature-sway'} ${back ? 'opacity-60' : ''}`}
           style={{ [side]: pos, height: `min(calc(${h} * var(--reef)), ${h * 9}px)`, aspectRatio: kind === 'brain' ? '100 / 60' : '100 / 120',
             animationDuration: `${4 + (i % 4)}s`, animationDelay: `${i * .3}s`, filter: back ? 'blur(.5px)' : undefined }}>
-          <Coral kind={kind} color={color} sw={sw} />
+          <Coral kind={kind} color={color} sw={sw} seed={i + 1} />
         </span>
       ))}
     </div>
