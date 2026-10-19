@@ -533,3 +533,19 @@ where u.kind in ('am','van') and not exists (select 1 from public.exercises e wh
 
 -- Gán quyền giáo viên (sửa username rồi chạy riêng dòng này):
 -- update public.profiles set role = 'teacher' where username = 'cogiao';
+
+-- ============ Rà soát vần: "bật lửa" không hợp với trẻ nhỏ → "gật đầu"; vần ut thiếu "bút chì" ============
+insert into public.words (text, emoji) values ('bút chì','✏️'),('gật đầu','🙆') on conflict (text) do nothing;
+delete from public.unit_words uw using public.units u, public.words w
+where uw.unit_id = u.id and uw.word_id = w.id and u.kind = 'van' and u.value = 'ât' and w.text = 'bật lửa';
+insert into public.unit_words (unit_id, word_id)
+select u.id, w.id from (values ('ut','bút chì'),('ât','gật đầu')) as x(value, word)
+join public.units u on u.kind = 'van' and u.value = x.value
+join public.words w on w.text = x.word
+on conflict do nothing;
+update public.exercises e set config = jsonb_build_object('items', case u.value
+    when 'ăt' then '[{"word":"đôi mắt","statement":"Từ \"đôi mắt\" có vần ăt","answer":true},{"word":"gật đầu","statement":"Từ \"gật đầu\" có vần ăt","answer":false},{"word":"mặt trời","statement":"Từ \"mặt trời\" có vần ăt","answer":true}]'::jsonb
+    else '[{"word":"gật đầu","statement":"Từ \"gật đầu\" có vần ât","answer":true},{"word":"mật ong","statement":"Từ \"mật ong\" có vần ât","answer":true},{"word":"cột mốc","statement":"Từ \"cột mốc\" có vần ât","answer":false}]'::jsonb end)
+from public.units u
+where e.unit_id = u.id and e.type = 'true_false' and u.kind = 'van' and u.value in ('ăt','ât')
+  and e.config::text like '%bật lửa%';

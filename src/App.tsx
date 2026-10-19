@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './auth/AuthProvider'
 import { RequireAuth } from './auth/RequireAuth'
 import { AuthPage } from './auth/LoginPage'
@@ -11,6 +11,7 @@ import { Profile } from './pages/Profile'
 import { AdminLayout } from './admin/Admin'
 import { GamePage, GamesHub } from './pages/Games'
 import { Leaderboard } from './pages/Leaderboard'
+import { NotFound } from './pages/NotFound'
 
 export default function App() {
   return (
@@ -33,7 +34,7 @@ export default function App() {
             <Route path="me" element={<Profile />} />
             <Route path="admin/*" element={<RequireAuth role="teacher"><AdminLayout /></RequireAuth>} />
           </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
