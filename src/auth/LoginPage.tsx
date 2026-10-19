@@ -57,7 +57,8 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
           <div className="relative">
             <input className={`${input} pr-14`} type={showPassword ? 'text' : 'password'} value={password}
               onChange={(e) => setPassword(e.target.value)}
-              autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required minLength={6} />
+              autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required minLength={6}
+              placeholder={mode === 'login' ? 'Nhập mật khẩu' : 'Ít nhất 6 ký tự'} />
             <button type="button" onClick={() => setShowPassword((v) => !v)}
               aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
               className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl text-2xl hover:bg-foam">

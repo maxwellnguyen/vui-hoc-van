@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import { useId, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { speak } from '../lib/speech'
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success'
@@ -135,34 +135,70 @@ const SIDE_CREATURES: Creature[] = [
   { emoji: '🦭', bottom: '6%', right: '28%', size: 'text-6xl', anim: 'creature-bob', dur: 4.2, delay: 1.2 },
 ]
 
-// Rạn san hô SVG nhiều lớp (cành mập có viền tối + vệt sáng, quạt lưới, san hô não, đá, cát)
+// Rạn san hô SVG: cành tô gradient (gốc đậm → ngọn sáng) + polyp tròn ở ngọn, quạt lưới mờ, san hô não có khối
 const CORAL_SHAPES = {
   stag: 'M50 120V72M50 92L30 62V36M30 62L17 47V28M50 82L70 56V30M70 56L84 41V22M50 72L46 40V14M46 40L58 26',
   fan: 'M50 120V84M50 84L22 50L14 20M22 50L30 24M50 84L40 40L38 10M50 84L60 40L64 12M50 84L78 50L86 22M78 50L70 26M40 40L48 18',
   tube: 'M30 120V58M45 120V34M60 120V48M75 120V66M52 120V20',
   bush: 'M50 120V90M50 90Q30 80 26 60M50 90Q70 80 74 60M26 60Q18 50 20 36M26 60Q36 50 34 38M74 60Q66 50 68 36M74 60Q84 50 80 38M50 90V54M50 54Q42 44 44 30M50 54Q58 44 56 30',
 }
+const TIPS: Record<keyof typeof CORAL_SHAPES, [number, number][]> = {
+  stag: [[30, 36], [17, 28], [70, 30], [84, 22], [46, 14], [58, 26]],
+  fan: [[14, 20], [30, 24], [38, 10], [64, 12], [86, 22], [70, 26], [48, 18]],
+  tube: [[30, 58], [45, 34], [60, 48], [75, 66], [52, 20]],
+  bush: [[20, 36], [34, 38], [68, 36], [80, 38], [44, 30], [56, 30]],
+}
 const FAN_FILL = 'M50 112L12 52L10 18L40 6L66 8L90 20L86 54Z'
 const shade = (c: string, k: string, p: number) => `color-mix(in srgb, ${c} ${p}%, ${k})`
-type CoralKind = keyof typeof CORAL_SHAPES | 'brain'
+type CoralKind = keyof typeof CORAL_SHAPES | 'brain' | 'puff' | 'weed'
+// san hô mềm dạng bông cải: các cụm tròn chồng nhau [cx, cy, r]
+const PUFF: [number, number, number][] = [[50, 92, 26], [26, 96, 18], [74, 96, 18], [36, 70, 20], [64, 70, 20], [50, 50, 20], [30, 50, 13], [70, 50, 13], [50, 30, 13]]
 
 function Coral({ kind, color, sw }: { kind: CoralKind; color: string; sw: number }) {
+  const id = useId()
+  const dark = shade(color, '#1b1440', 55), light = shade(color, 'white', 55)
   if (kind === 'brain') return (
     <svg viewBox="0 0 100 60" className="h-full w-full">
-      <path d="M4 60Q2 14 50 8Q98 14 96 60Z" style={{ fill: color, stroke: shade(color, 'black', 70), strokeWidth: 3 }} />
+      <defs><radialGradient id={id} cx=".4" cy=".3" r=".8"><stop offset="0" stopColor={light} /><stop offset=".55" stopColor={color} /><stop offset="1" stopColor={dark} /></radialGradient></defs>
+      <path d="M4 60Q2 14 50 8Q98 14 96 60Z" fill={`url(#${id})`} />
       <path d="M18 52Q20 30 34 24Q46 34 50 20Q56 34 66 24Q80 30 82 52M30 56Q34 40 44 38Q50 46 58 38Q68 42 70 56"
-        fill="none" style={{ stroke: shade(color, 'black', 65) }} strokeWidth="2.5" strokeLinecap="round" />
-      <ellipse cx="38" cy="20" rx="14" ry="5" style={{ fill: shade(color, 'white', 50) }} opacity=".5" />
+        fill="none" stroke={dark} strokeWidth="2" strokeLinecap="round" opacity=".55" />
+    </svg>
+  )
+  if (kind === 'puff') return (
+    <svg viewBox="0 0 100 120" className="h-full w-full" overflow="visible">
+      <defs><radialGradient id={id} cx=".35" cy=".3" r=".75"><stop offset="0" stopColor={light} /><stop offset=".6" stopColor={color} /><stop offset="1" stopColor={dark} /></radialGradient></defs>
+      {PUFF.map(([x, y, r], i) => <g key={i}>
+        <circle cx={x} cy={y} r={r} fill={`url(#${id})`} />
+        {[0, 1, 2].map((j) => <circle key={j} cx={x - r * 0.35 + j * r * 0.35} cy={y - r * 0.3 + (j % 2) * r * 0.3} r={r * 0.09} fill={light} opacity=".8" />)}
+      </g>)}
+    </svg>
+  )
+  if (kind === 'weed') return (
+    <svg viewBox="0 0 100 120" className="h-full w-full" overflow="visible">
+      <defs><linearGradient id={id} x1="0" y1="1" x2="0" y2="0"><stop offset="0" stopColor={dark} /><stop offset="1" stopColor={light} /></linearGradient></defs>
+      {['M40 120C20 90 60 70 38 40C28 24 40 10 46 4C44 20 52 30 50 46C48 70 62 92 52 120Z', 'M60 120C76 96 50 80 66 54C74 40 66 28 62 20C72 30 80 44 76 58C70 80 82 100 72 120Z']
+        .map((w, i) => <path key={i} d={w} fill={`url(#${id})`} />)}
     </svg>
   )
   const d = CORAL_SHAPES[kind]
   return (
     <svg viewBox="0 0 100 120" className="h-full w-full" overflow="visible">
-      {kind === 'fan' && <path d={FAN_FILL} style={{ fill: color }} opacity=".35" />}
-      <path d={d} fill="none" style={{ stroke: shade(color, 'black', 70) }} strokeWidth={sw + 4} strokeLinecap="round" strokeLinejoin="round" />
-      <path d={d} fill="none" style={{ stroke: color }} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" />
-      <path d={d} fill="none" style={{ stroke: shade(color, 'white', 45) }} strokeWidth={Math.max(1.5, sw * 0.3)} strokeLinecap="round"
-        strokeDasharray="2 7" opacity=".9" transform="translate(-1.5 0)" />
+      <defs><linearGradient id={id} x1="0" y1="120" x2="0" y2="0" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stopColor={dark} /><stop offset=".45" stopColor={color} /><stop offset="1" stopColor={light} /></linearGradient></defs>
+      {kind === 'fan' && <>
+        <path d={FAN_FILL} fill={`url(#${id})`} opacity=".45" />
+        {/* lưới quạt */}
+        <path d={FAN_FILL} fill="none" stroke={light} strokeWidth="1" opacity=".5" strokeDasharray="1 3" />
+        {[30, 50, 70].map((y) => <path key={y} d={`M14 ${y}Q50 ${y - 14} 88 ${y}`} fill="none" stroke={light} strokeWidth="1" opacity=".45" />)}
+      </>}
+      <path d={d} fill="none" stroke={`url(#${id})`} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" />
+      {/* vệt sáng một bên cành cho có khối */}
+      <path d={d} fill="none" stroke="white" strokeWidth={Math.max(1, sw * 0.22)} strokeLinecap="round" strokeLinejoin="round"
+        opacity=".28" transform={`translate(${-sw * 0.22} 0)`} />
+      {TIPS[kind].map(([x, y], i) => kind === 'tube'
+        ? <ellipse key={i} cx={x} cy={y} rx={sw * 0.62} ry={sw * 0.3} fill={dark} stroke={light} strokeWidth="1.5" />
+        : <circle key={i} cx={x} cy={y} r={sw * 0.6} fill={light} />)}
     </svg>
   )
 }
@@ -179,6 +215,9 @@ const REEF: [string, 'left' | 'right', CoralKind, string, number, number, boolea
   ['-3%', 'right', 'fan', '#FF9F43', 36, 5], ['8%', 'right', 'stag', '#5F9DF7', 30, 10], ['16%', 'right', 'bush', '#F78FB3', 24, 9],
   ['22%', 'right', 'tube', '#FECA57', 20, 11], ['2%', 'right', 'tube', '#A55EEA', 15, 12], ['27%', 'right', 'fan', '#FF6B81', 17, 5],
   ['12%', 'right', 'brain', '#FF9F43', 7, 0], ['24%', 'right', 'brain', '#C56CF0', 8, 0],
+  // san hô mềm + rong biển cho rạn dày, mềm mại
+  ['5%', 'left', 'puff', '#FF8FAB', 14, 0], ['31%', 'left', 'puff', '#FFB86B', 10, 0], ['-2%', 'left', 'weed', '#3FB37F', 30, 0], ['34%', 'left', 'weed', '#2EA88A', 22, 0],
+  ['6%', 'right', 'puff', '#B794F6', 13, 0], ['31%', 'right', 'puff', '#FF8FAB', 10, 0], ['-2%', 'right', 'weed', '#2EA88A', 28, 0], ['34%', 'right', 'weed', '#3FB37F', 20, 0],
 ]
 
 const ROCK = 'M0 30V14Q8 2 20 10Q30 0 44 9Q56 2 68 12Q82 6 100 20V30Z'
