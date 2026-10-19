@@ -3,6 +3,8 @@
  *  1. Máy có sẵn giọng vi-VN (Edge, Windows/macOS/Android đã cài) → Web Speech API.
  *  2. Không có → tự dùng giọng online qua /api/tts (mp3), mọi máy đều nghe được, không cần cài gì.
  */
+import { applyTone } from './vietnamese'
+
 let viVoice: SpeechSynthesisVoice | null = null
 
 function pickVoice() {
@@ -31,7 +33,9 @@ let audio: HTMLAudioElement | null = null
 export function speak(text: string, opts: SpeakOptions = {}) {
   stopSpeaking()
   const id = ++session
-  if (hasVietnameseVoice()) speakNative(text, opts)
+  // vần đứng riêng tận cùng c/t/p/ch (ăc, ôt…) không thanh thì máy đọc sai → đọc kèm thanh sắc
+  if (/^[^\s\u0300\u0301\u0303\u0309\u0323]+(c|t|p|ch)$/i.test(text.normalize('NFD'))) text = applyTone(text, '´')
+  if (hasVietnameseVoice()) speakNative(text, opts, id)
   else speakOnline(text, opts, id)
 }
 
@@ -41,17 +45,26 @@ export function stopSpeaking() {
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel()
 }
 
-function speakNative(text: string, opts: SpeakOptions) {
+// Đọc từng khúc ngắn: Chrome tự ngắt utterance dài ~15s; bỏ qua callback của lượt đọc đã bị dừng
+function speakNative(text: string, opts: SpeakOptions, id: number) {
   if (!('speechSynthesis' in window)) { opts.onEnd?.(); return }
-  const u = new SpeechSynthesisUtterance(text)
-  u.lang = 'vi-VN'
+  const chunks = chunkText(text)
   const v = viVoice ?? pickVoice()
-  if (v) u.voice = v
-  u.rate = opts.rate ?? 0.8
-  if (opts.onBoundary) u.onboundary = (e) => opts.onBoundary!(e.charIndex)
-  u.onend = () => opts.onEnd?.()
-  u.onerror = () => opts.onEnd?.()
-  window.speechSynthesis.speak(u)
+  const playAt = (k: number) => {
+    if (id !== session) return
+    if (k >= chunks.length) { opts.onEnd?.(); return }
+    const c = chunks[k]
+    const u = new SpeechSynthesisUtterance(c.text)
+    u.lang = 'vi-VN'
+    if (v) u.voice = v
+    u.rate = opts.rate ?? 0.8
+    if (opts.onBoundary) u.onboundary = (e) => id === session && opts.onBoundary!(c.start + e.charIndex)
+    u.onend = () => playAt(k + 1)
+    u.onerror = () => playAt(chunks.length)
+    window.speechSynthesis.speak(u)
+  }
+  // Chrome bỏ mất câu nếu speak() ngay sau cancel() cùng nhịp
+  setTimeout(() => playAt(0), 0)
 }
 
 export const ttsUrl = (text: string) => `/api/tts?q=${encodeURIComponent(text)}`
@@ -101,7 +114,7 @@ function speakOnline(text: string, opts: SpeakOptions, id: number) {
       // mất mạng / API lỗi → thử giọng mặc định của máy
       if (id !== session) return
       audio = null
-      speakNative(chunks.slice(k).map((x) => x.text).join(' '), { ...opts, onBoundary: undefined })
+      speakNative(chunks.slice(k).map((x) => x.text).join(' '), { ...opts, onBoundary: undefined }, id)
     }
     a.play().catch(() => a.onerror?.(new Event('error')))
   }

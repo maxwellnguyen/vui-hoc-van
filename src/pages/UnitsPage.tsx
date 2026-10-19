@@ -10,7 +10,7 @@ const labelSize = (t: string) => {
   if (n <= 2) return 'text-4xl sm:text-5xl'
   if (n === 3) return 'text-3xl sm:text-4xl'
   if (n === 4) return 'text-2xl sm:text-3xl'
-  return 'px-2 text-lg sm:text-xl'
+  return 'px-1 text-base sm:text-xl'
 }
 
 const SUBTYPE_EMOJI: Record<string, string> = { chinh: '🐚', phu: '🦀', ghep: '🐙' }
@@ -44,7 +44,8 @@ export function UnitsPage({ kind }: { kind: UnitKind }) {
             <Link key={u.id} to={`/unit/${u.id}`}
               className="flex aspect-square animate-pop items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-white to-aqua text-center font-body font-extrabold leading-none text-ocean-deep shadow-xl transition hover:-rotate-3 hover:scale-105"
               style={{ animationDelay: `${i * 30}ms` }}>
-              <span className={`${labelSize(label)} pt-[0.15em]`}>{label}</span>
+              {/* "Thanh sắc ( ´ )" → dấu xuống dòng riêng, không bị ngắt giữa ngoặc */}
+              <span className={`${labelSize(label)} whitespace-pre-line pt-[0.15em] leading-tight`}>{label.replace(/\s*\(\s*(\S)\s*\)/, '\n( $1 )')}</span>
             </Link>
           )
         })}
