@@ -10,7 +10,11 @@ const W = 480
 const H = 360
 const COLORS = ['#1572A1', '#FF7F6B', '#3BB273', '#9B5DE5']
 const STROKE_COLORS = ['#FF7F6B', '#1572A1', '#3BB273', '#9B5DE5', '#E8A800']
-const SIZES = [{ k: 0.6, label: 'Nét nhỏ' }, { k: 1, label: 'Nét vừa' }, { k: 1.5, label: 'Nét to' }]
+// k = bội số bề rộng nét mẫu
+const SIZES = [
+  { k: 0.2, label: 'Nét rất nhỏ' }, { k: 0.35, label: 'Nét nhỏ' }, { k: 0.5, label: 'Nét vừa' },
+  { k: 0.7, label: 'Nét to' }, { k: 1, label: 'Nét rất to' },
+]
 
 /**
  * Tô / đồ chữ theo mẫu chữ viết thường tiểu học trên nền ô li.
@@ -33,7 +37,7 @@ export function TraceCanvas({ config, onFinish }: ExerciseProps<TraceConfig>) {
   }, [hand])
 
   const brush = geo ? Math.max(14, geo.s * 0.6) : 26 // bề rộng nét mẫu; vùng chấm điểm tính theo nó
-  const [sizeK, setSizeK] = useState(1)
+  const [sizeK, setSizeK] = useState(0.5)
   const pen = brush * sizeK
   const fontSize = Math.min(260, Math.floor(620 / Math.max(1, [...glyph].length)))
   const font = `800 ${fontSize}px Nunito, sans-serif`
@@ -173,7 +177,7 @@ export function TraceCanvas({ config, onFinish }: ExerciseProps<TraceConfig>) {
         {SIZES.map(({ k, label }) => (
           <button key={k} aria-label={label} title={label} aria-pressed={sizeK === k} onClick={() => setSizeK(k)}
             className={`flex h-11 w-11 items-center justify-center rounded-full border-4 bg-white ${sizeK === k ? 'scale-110 border-ocean-deep' : 'border-aqua'}`}>
-            <span className="rounded-full" style={{ background: color, width: 14 * k + 2, height: 14 * k + 2 }} />
+            <span className="rounded-full" style={{ background: color, width: 4 + 18 * k, height: 4 + 18 * k }} />
           </button>
         ))}
         <span className="mx-1 h-8 w-px bg-aqua" aria-hidden />
