@@ -92,8 +92,10 @@ export function AmbientSound() {
     const stopTune = game ? tune(ctx, out, TUNE, 220, 523.25, 'triangle', 0.03, 0.3) : () => {}
     let stopCalm = () => {}
     // chưa có file mp3 → phát nhạc nền tạm tổng hợp
+    // lỗi tải mp3 có thể tới sau khi effect đã dọn → không bật giai điệu "mồ côi" chạy chồng
+    let alive = true
     music.addEventListener('error', () => {
-      if (game) return
+      if (game || !alive) return
       const stopMel = tune(ctx, out, HAPPY, 260, 523.25, 'triangle', 0.06, 0.28)
       const stopBass = tune(ctx, out, BASS, 260, 130.81, 'sine', 0.07, 0.22)
       stopCalm = () => { stopMel(); stopBass() }
@@ -103,7 +105,7 @@ export function AmbientSound() {
     const loop = () => {
       // thỉnh thoảng một chùm 2–3 bong bóng liên tiếp
       const n = Math.random() < 0.35 ? 2 + Math.floor(Math.random() * 3) : 1
-      for (let i = 0; i < n; i++) setTimeout(() => bubble(ctx, out), i * (60 + Math.random() * 120))
+      for (let i = 0; i < n; i++) setTimeout(() => alive && bubble(ctx, out), i *(60 + Math.random() * 120))
       timer = window.setTimeout(loop, 2500 + Math.random() * 4000)
     }
     // trình duyệt chặn tự phát khi chưa chạm: thử ngay, nếu bị chặn thì phát ở lần chạm đầu tiên
@@ -121,6 +123,7 @@ export function AmbientSound() {
     window.addEventListener('keydown', start)
     loop()
     return () => {
+      alive = false
       window.removeEventListener('pointerdown', start)
       window.removeEventListener('keydown', start)
       clearTimeout(check)
