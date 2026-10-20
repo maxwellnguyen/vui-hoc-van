@@ -10,6 +10,7 @@ const W = 480
 const H = 360
 const COLORS = ['#1572A1', '#FF7F6B', '#3BB273', '#9B5DE5']
 const STROKE_COLORS = ['#FF7F6B', '#1572A1', '#3BB273', '#9B5DE5', '#E8A800']
+const SIZES = [{ k: 0.6, label: 'Nét nhỏ' }, { k: 1, label: 'Nét vừa' }, { k: 1.5, label: 'Nét to' }]
 
 /**
  * Tô / đồ chữ theo mẫu chữ viết thường tiểu học trên nền ô li.
@@ -31,7 +32,9 @@ export function TraceCanvas({ config, onFinish }: ExerciseProps<TraceConfig>) {
     return { s, x0, y0, paths: hand.strokes.map(tf), starts: hand.strokes.map((d) => strokeStart(tf(d))) }
   }, [hand])
 
-  const brush = geo ? Math.max(14, geo.s * 0.6) : 26
+  const brush = geo ? Math.max(14, geo.s * 0.6) : 26 // bề rộng nét mẫu; vùng chấm điểm tính theo nó
+  const [sizeK, setSizeK] = useState(1)
+  const pen = brush * sizeK
   const fontSize = Math.min(260, Math.floor(620 / Math.max(1, [...glyph].length)))
   const font = `800 ${fontSize}px Nunito, sans-serif`
 
@@ -51,7 +54,7 @@ export function TraceCanvas({ config, onFinish }: ExerciseProps<TraceConfig>) {
   }
   const stroke = (from: { x: number; y: number }, to: { x: number; y: number }) => {
     const ctx = ref.current!.getContext('2d')!
-    ctx.strokeStyle = color; ctx.lineWidth = brush; ctx.lineCap = 'round'; ctx.lineJoin = 'round'
+    ctx.strokeStyle = color; ctx.lineWidth = pen; ctx.lineCap = 'round'; ctx.lineJoin = 'round'
     ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.lineTo(to.x, to.y); ctx.stroke()
   }
   const down = (e: React.PointerEvent) => {
@@ -166,7 +169,14 @@ export function TraceCanvas({ config, onFinish }: ExerciseProps<TraceConfig>) {
         <canvas ref={ref} width={W} height={H} className="absolute inset-0 h-full w-full opacity-80"
           onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} />
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        {SIZES.map(({ k, label }) => (
+          <button key={k} aria-label={label} title={label} aria-pressed={sizeK === k} onClick={() => setSizeK(k)}
+            className={`flex h-11 w-11 items-center justify-center rounded-full border-4 bg-white ${sizeK === k ? 'scale-110 border-ocean-deep' : 'border-aqua'}`}>
+            <span className="rounded-full" style={{ background: color, width: 14 * k + 2, height: 14 * k + 2 }} />
+          </button>
+        ))}
+        <span className="mx-1 h-8 w-px bg-aqua" aria-hidden />
         {COLORS.map((c) => (
           <button key={c} aria-label="Chọn màu" onClick={() => setColor(c)}
             className={`h-11 w-11 rounded-full border-4 ${color === c ? 'scale-110 border-ocean-deep' : 'border-white'}`} style={{ background: c }} />
