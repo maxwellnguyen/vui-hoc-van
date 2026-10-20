@@ -47,8 +47,9 @@ function underwater(ctx: AudioContext, out: AudioNode) {
 
 /** Nhạc trò chơi: giai điệu ngũ cung vui tươi lặp lại, tiếng "xylophone" nhỏ. */
 const TUNE = [0, 2, 4, 7, 9, 7, 4, 2, 4, 7, 9, 12, 9, 7, 4, -1]
-/** Nhạc nền tạm (khi chưa có file mp3): giai điệu chậm, êm, trầm hơn. */
-const CALM = [0, 4, 7, 4, 9, 7, 4, 2, -1, 2, 4, 7, 4, 2, 0, -1]
+/** Nhạc nền tạm (khi chưa có file mp3): giai điệu Đô trưởng nhún nhảy + bè trầm "bùm-tách" (C–F–C–G). */
+const HAPPY = [0, 4, 7, 4, 9, 7, 4, 7, 5, 9, 12, 9, 7, -1, 4, -1, 0, 4, 7, 12, 9, 7, 5, 4, 2, 5, 7, 11, 12, -1, -1, -1]
+const BASS = [0, -1, 7, -1, 0, -1, 7, -1, 5, -1, 12, -1, 0, -1, 7, -1, 0, -1, 7, -1, 5, -1, 12, -1, 7, -1, 14, -1, 0, -1, 7, -1]
 function tune(ctx: AudioContext, out: AudioNode, notes: number[], ms: number, base: number, type: OscillatorType, vol: number, len: number) {
   let i = 0
   const id = window.setInterval(() => {
@@ -91,7 +92,12 @@ export function AmbientSound() {
     const stopTune = game ? tune(ctx, out, TUNE, 220, 523.25, 'triangle', 0.03, 0.3) : () => {}
     let stopCalm = () => {}
     // chưa có file mp3 → phát nhạc nền tạm tổng hợp
-    music.addEventListener('error', () => { if (!game) stopCalm = tune(ctx, out, CALM, 600, 392, 'triangle', 0.09, 1.2) })
+    music.addEventListener('error', () => {
+      if (game) return
+      const stopMel = tune(ctx, out, HAPPY, 260, 523.25, 'triangle', 0.06, 0.28)
+      const stopBass = tune(ctx, out, BASS, 260, 130.81, 'sine', 0.07, 0.22)
+      stopCalm = () => { stopMel(); stopBass() }
+    })
     if (game) music.volume = 0.04
     let timer = 0
     const loop = () => {
